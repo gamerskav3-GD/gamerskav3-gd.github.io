@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GD Plist Generator</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f5f7;--card:#fff;--text:#1c1c1e;--muted:#6b6b72;--line:#d9d9de;--accent:#e5322d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--card:#1e1e22;--text:#f2f2f4;--muted:#9a9aa3;--line:#33333a}}
+:root[data-theme="dark"]{--bg:#141416;--card:#1e1e22;--text:#f2f2f4;--muted:#9a9aa3;--line:#33333a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:16px 20px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+h1{margin:0;font-size:22px;flex:1}
+header button{width:auto;margin:0;padding:8px 12px}
+main{display:grid;grid-template-columns:330px 1fr;gap:16px;padding:12px 20px 24px}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:12px;text-align:center;cursor:pointer;margin-bottom:8px;font-size:14px}
+.drop b{display:block}.drop span{color:var(--muted);font-size:12px;word-break:break-all}
+input[type=file]{display:none}
+.row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:14px}
+.row input[type=range]{flex:1}
+select,input[type=number],input[type=text]{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px}
+button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 12px;font-size:14px;cursor:pointer;width:100%;margin-top:6px}
+button.alt{background:transparent;color:var(--text);border:1px solid var(--line)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.tools{display:flex;gap:6px;margin:8px 0}.tools button{margin:0;padding:9px 4px;flex:1}
+.status{font-size:13px;color:var(--muted);margin-top:10px}.status.err{color:var(--accent)}
+#panel{display:none;border-top:1px solid var(--line);margin-top:10px;padding-top:10px;font-size:13px}
+#info{color:var(--muted);margin:6px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.two label{font-size:12px;color:var(--muted)}
+#pad{display:none;grid-template-columns:repeat(3,48px);gap:4px;justify-content:center;margin:8px 0}#pad button{margin:0;padding:8px}
+#stepl{text-align:center;color:var(--muted);font-size:12px}
+.view{touch-action:pan-x pan-y;overflow:auto;height:75vh;display:flex;border-radius:8px;background:#000;position:relative;min-height:240px}
+canvas{display:block;margin:auto;flex:none;image-rendering:pixelated}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#888;font-size:14px;text-align:center;padding:20px}
+#tip{position:fixed;pointer-events:none;background:#000c;color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;display:none;z-index:9}
+#modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(420px,100%);max-height:85vh;overflow:auto;position:relative;text-align:center}
+.box .x{position:absolute;top:8px;right:12px;font-size:22px;cursor:pointer}
+.kr{display:flex;align-items:center;gap:8px;margin:6px 0;text-align:left;font-size:14px}.kr span{flex:1}.zb{width:auto;margin:0;padding:4px 12px;text-transform:none;letter-spacing:0}
+.ic{width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mm-off{background:#e5322d!important;color:#fff!important;border-color:#e5322d!important}.mm-on{background:#2b6fe6!important;color:#fff!important;border-color:#2b6fe6!important}
+#bEye.hid{opacity:.35}
+.sw{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:12px;background:var(--line);position:relative;cursor:pointer;margin:0;flex:none;border:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.sw:checked{background:var(--accent)}.sw:checked::after{left:21px}
+.drop{position:relative}
+.infoBtn{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;padding:0;margin:0;border:1.5px solid var(--muted);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center}
+#tapEnter{display:none;position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));width:auto;z-index:10;border-radius:30px;padding:14px 18px;background:#2b6fe6;box-shadow:0 2px 10px #0006;touch-action:manipulation}
+#oLog p{white-space:pre-wrap;margin:6px 0}#oLog button{width:auto;margin:2px 4px 6px 0}
+.kr button{width:90px;margin:0;padding:6px}
+#tapBtn{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:auto;z-index:10;border-radius:30px;padding:14px 18px;box-shadow:0 2px 10px #0006;touch-action:manipulation}
+.pkRow{display:flex;gap:6px;align-items:center;margin-bottom:6px;font-size:14px}.pkRow span{flex:1;text-align:left;word-break:break-all}.pkRow button{width:auto;padding:6px 10px}
+#bCmp.dot::after{content:"";position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#e5484d}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b1b1f">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+/* mini zip: makes and reads .zip files without any internet */
+(function(){
+  const T=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;T[i]=c>>>0}
+  const crc=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=T[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+  const enc=new TextEncoder(),dec=new TextDecoder();
+  const toU8=async d=>d instanceof Uint8Array?d:typeof d==='string'?enc.encode(d):new Uint8Array(await d.arrayBuffer());
+  async function inflate(u8){const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(ds.readable).arrayBuffer())}
+  function MiniZip(){this._f=[]}
+  MiniZip.prototype.file=function(name,data){this._f.push({name:String(name).replace(/^\/+/,''),data});return this};
+  MiniZip.prototype.generateAsync=async function(){
+    const d=new Date(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+    const parts=[],cen=[];let off=0;
+    for(const f of this._f){
+      const n=enc.encode(f.name),u=await toU8(f.data),c=crc(u);
+      const lh=new DataView(new ArrayBuffer(30));
+      lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);lh.setUint16(10,tm,true);lh.setUint16(12,dt,true);
+      lh.setUint32(14,c,true);lh.setUint32(18,u.length,true);lh.setUint32(22,u.length,true);lh.setUint16(26,n.length,true);lh.setUint16(28,0,true);
+      parts.push(new Uint8Array(lh.buffer),n,u);
+      const ch=new DataView(new ArrayBuffer(46));
+      ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(10,0,true);ch.setUint16(12,tm,true);ch.setUint16(14,dt,true);
+      ch.setUint32(16,c,true);ch.setUint32(20,u.length,true);ch.setUint32(24,u.length,true);ch.setUint16(28,n.length,true);ch.setUint32(42,off,true);
+      cen.push(new Uint8Array(ch.buffer),n);
+      off+=30+n.length+u.length;
+    }
+    let cs=0;cen.forEach(p=>cs+=p.length);
+    const e=new DataView(new ArrayBuffer(22));
+    e.setUint32(0,0x06054b50,true);e.setUint16(8,this._f.length,true);e.setUint16(10,this._f.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+    return new Blob([...parts,...cen,new Uint8Array(e.buffer)],{type:'application/zip'});
+  };
+  MiniZip.loadAsync=async function(file){
+    const u=new Uint8Array(await file.arrayBuffer()),v=new DataView(u.buffer,u.byteOffset,u.byteLength);
+    let e=-1;for(let i=u.length-22;i>=Math.max(0,u.length-65558);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
+    if(e<0)throw new Error('This is not a zip file.');
+    const cnt=v.getUint16(e+10,true);let p=v.getUint32(e+16,true);const files={};
+    for(let k=0;k<cnt;k++){
+      if(v.getUint32(p,true)!==0x02014b50)throw new Error('The zip file is damaged.');
+      const meth=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),xl=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true);
+      const name=dec.decode(u.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+      files[name]={name,dir:name.endsWith('/'),async:async type=>{
+        const ln=v.getUint16(lo+26,true),lx=v.getUint16(lo+28,true),s=lo+30+ln+lx,raw=u.subarray(s,s+cs);
+        let out;if(meth===0)out=raw;else if(meth===8)out=await inflate(raw);else throw new Error('This zip uses a type I cannot read.');
+        return type==='string'?dec.decode(out):type==='blob'?new Blob([out]):out;
+      }};
+    }
+    return {files};
+  };
+  window.JSZip=MiniZip;
+})();
+</script>
+</head>
+<body>
+<header><h1>GD Plist Generator</h1><button class="alt" id="bSave" title="Manual saves"><svg class="ic" viewBox="0 0 24 24"><path d="M5 3h12l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg></button><button class="alt" id="bSet" title="Settings"><svg class="ic" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="alt" id="bCmp" title="Compare original to edited" style="position:relative"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="14" rx="1"/><rect x="14" y="5" width="7" height="14" rx="1"/><path d="M10.5 9.5L13.5 12l-3 2.5"/></svg></button><button class="alt" id="bPack" title="Pack builder"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Pack</button><button class="alt" id="bOff" title="Offline helper">📄</button><button class="alt" id="bAI">🤖</button><button class="alt" id="bKeys">⌨️</button><button class="alt" id="bAuto">Auto saved</button></header>
+<main>
+<section class="card">
+<h2 style="display:flex;align-items:center;gap:6px">Upload<span style="flex:1"></span><button class="alt zb" id="bInfo" title="Info" style="border-radius:50%;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></h2>
+<label class="drop"><input type="file" id="fImg" accept="image/*"><b>1. Image (.png)</b><span id="nImg">Tap to choose</span></label>
+<label class="drop"><input type="file" id="fPl" accept=".plist,.xml,text/xml"><b>2. Plist (.plist)</b><span id="nPl">Tap to choose</span></label>
+<div id="plMsg" style="font-size:12px;opacity:.5;margin:-4px 0 6px"></div>
+<div class="row"><label for="zoom">Zoom</label><input type="range" id="zoom" min="10" max="400" value="100"><span id="zv">100%</span></div>
+<div class="row"><label for="bw">Border</label><input type="range" id="bw" min="1" max="8" value="2"><span id="bv">2px</span></div>
+<div class="row"><input type="checkbox" id="lbl"><label for="lbl">Show group names</label></div>
+<div id="panel">
+<div class="tools"><button class="alt" id="bMulti" title="Multi select mode">🖲</button><button class="alt" id="bUndo" title="Undo"><svg viewBox="70 66 100 68" style="height:1.3em;width:auto;vertical-align:middle" fill="none" stroke="#ff5a52" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M112 78 L80 100 L112 122"/><path d="M134 78 H160 V122 H134"/></svg></button><button class="alt" id="bRedo" title="Redo"><svg viewBox="210 66 100 68" style="height:1.3em;width:auto;vertical-align:middle" fill="none" stroke="#4d8dff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M246 78 H220 V122 H246"/><path d="M268 78 L300 100 L268 122"/></svg></button><button class="alt" id="bAdd" title="Add group">+</button><button class="alt" id="bCopy" title="Copy group">🔄</button><button class="alt" id="bDel" title="Delete group">♻️</button></div>
+<input type="text" id="q" placeholder="Search groups...">
+<select id="sel" size="5" style="margin-top:6px"></select>
+<div class="tools" style="margin-top:6px"><button class="alt" id="bNext" style="flex:1;padding:12px 10px;font-size:15px">▲ Next</button><button class="alt" id="bPrev" style="flex:1;padding:12px 10px;font-size:15px">▼ Previous</button></div>
+<div id="selp" style="display:none"><div class="tools" style="margin-top:10px"><button class="alt" id="bEye" title="Hide or show red box">👁</button><button class="alt" id="bRev" title="Revert group" disabled><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></button></div>
+<div style="margin-top:10px"><label class="two">Group name</label><input type="text" id="rn"></div>
+<div id="info"></div>
+<div class="two"><div><label>Offset X</label><input type="number" id="ox" step="0.5"></div><div><label>Offset Y</label><input type="number" id="oy" step="0.5"></div></div>
+<div class="two" id="xyRow"><div><label>X</label><input type="number" id="inX" step="1"></div><div><label>Y</label><input type="number" id="inY" step="1"></div></div>
+<div class="two" id="szRow"><div><label>Size X</label><input type="number" id="inW" step="1" min="1"></div><div><label>Size Y</label><input type="number" id="inH" step="1" min="1"></div></div>
+<div class="tools"><button class="alt" id="cSz">Copy size</button><button class="alt" id="pSz">Paste size</button></div>
+<div class="tools"><button class="alt" id="cOf">Copy offset</button><button class="alt" id="pOf">Paste offset</button></div>
+<button class="alt" id="bRot">▢+ Rotate 90°</button>
+<button class="alt" id="bDlg">download separate image</button>
+<div class="tools"><button class="alt" data-s="1">+1 px</button><button class="alt" data-s="5">+5 px</button><button class="alt" data-s="10">+10 px</button></div>
+<div class="tools"><input type="number" id="cs" placeholder="px" min="1"><button class="alt" id="bC">+ px</button></div>
+<div id="stepl"></div>
+<div id="pad"><span></span><button class="alt" data-d="up">⬆️</button><span></span><button class="alt" data-d="left">⬅️</button><span></span><button class="alt" data-d="right">➡️</button><span></span><button class="alt" data-d="down">⬇️</button><span></span></div>
+</div></div>
+<button class="alt" id="bPre" disabled>Pre-test check</button><button id="dlp" disabled>Download edited plist</button>
+<button id="dli" class="alt" disabled>Download edited image</button>
+<div class="status" id="st">Waiting for files...</div>
+</section>
+<section class="card">
+<h2 style="display:flex;align-items:center;gap:6px">Result<span style="flex:1"></span><button class="alt zb" id="zOut">−</button><button class="alt zb" id="zFit">Fit</button><button class="alt zb" id="zIn">+</button></h2>
+<div class="view"><canvas id="cv"></canvas><div class="empty" id="empty">Upload an image and plist to see the red borders</div></div>
+<p style="margin:8px 2px 0;font-size:12px;opacity:.55">There might be small differences between the editor and the game.</p>
+<h2 style="display:flex;align-items:center;gap:6px;margin-top:16px">Game preview<span style="flex:1"></span><button class="alt zb" id="gAn" aria-label="Animation preview"><svg class="ic" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button><button class="alt zb" id="gOut">−</button><button class="alt zb" id="gIn">+</button></h2>
+<div class="view" id="gview" style="height:45vh"><canvas id="gv"></canvas></div>
+<p style="margin:8px 2px 0;font-size:12px;opacity:.55">There might be small differences between the editor and the game.</p>
+</section>
+</main>
+<button id="tapEnter">Enter</button><button id="tapBtn">👆 tap</button><div id="tip"></div>
+<div id="modal"><div class="box" id="mb"></div></div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
+let sheet=null,sc=null,xdoc=null,fd=null,frames=[],sel=-1,drag=null,fname='edited.plist',hist=[],redo=[],step=1,bind=null,ob=null,multi=false,ms=new Set();
+var cfg={auto:20,red:'#ff0000',bg:'#000000',hs:9,snap:true,gs:true,gd:8,gg:0,names:false,fps:8,dark:null};try{Object.assign(cfg,JSON.parse(localStorage.getItem('gdcfg')||'{}'))}catch(e){}
+const sn=v=>cfg.snap?Math.round(v):Math.round(v*2)/2;
+const nums=s=>(String(s).match(/-?\d+(\.\d+)?/g)||[]).map(Number);
+const fmt=n=>String(Math.round(n*10)/10);
+const pairs=d=>{const c=[...d.children],m={};for(let i=0;i<c.length;i+=2)m[c[i].textContent]=c[i+1];return m};
+const snap=()=>frames.map(f=>({...f}));
+const status=(m,e)=>{const s=$('st');s.textContent=m;s.className='status'+(e?' err':'')};
+
+let origText='',origNames=[],origSig=null;
+function load(txt){
+  const d=new DOMParser().parseFromString(txt,'text/xml');
+  if(d.querySelector('parsererror'))throw new Error('Invalid plist XML');
+  const root=d.querySelector('plist > dict'),rp=root&&pairs(root);
+  if(!rp||!rp.frames)throw new Error('No "frames" key in plist');
+  const c=[...rp.frames.children],out=[];origText=txt;origNames=[];for(let i=0;i<c.length;i+=2)origNames.push(c[i].textContent);
+  for(let i=0;i<c.length;i+=2){
+    const m=pairs(c[i+1]),rk=m.textureRect?'textureRect':'frame';
+    if(!m[rk])continue;
+    const r=nums(m[rk].textContent);if(r.length<4)continue;
+    const ok=m.spriteOffset?'spriteOffset':'offset',off=m[ok]?nums(m[ok].textContent):[0,0];
+    const rot=!!(m.textureRotated?m.textureRotated.tagName==='true':m.rotated&&m.rotated.tagName==='true');
+    const ss=m.spriteSize?nums(m.spriteSize.textContent):null,ssd=!!(ss&&ss.length>1&&(ss[0]!==r[2]||ss[1]!==r[3]));
+    out.push({name:c[i].textContent,el:c[i+1],rk,ok,rot,ssd,ss0:ss,sm:[r[2],r[3]],x:r[0],y:r[1],w:rot?r[3]:r[2],h:rot?r[2]:r[3],ox:off[0]||0,oy:off[1]||0});
+  }
+  if(!out.length)throw new Error('No frames found');
+  xdoc=d;fd=rp.frames;frames=out;sel=-1;hist=[];redo=[];out.forEach(f=>f.o={x:f.x,y:f.y,w:f.w,h:f.h,rot:f.rot,ox:f.ox,oy:f.oy,name:f.name});
+}
+function commitAll(){
+  for(const f of frames){
+    const m=pairs(f.el),rw=f.rot?f.h:f.w,rh=f.rot?f.w:f.h;
+    m[f.rk].textContent='{{'+f.x+','+f.y+'},{'+rw+','+rh+'}}';
+    if(m.spriteSize)m.spriteSize.textContent='{'+rw+','+rh+'}';
+    if(m[f.ok])m[f.ok].textContent='{'+fmt(f.ox)+','+fmt(f.oy)+'}';
+    const rk=m.textureRotated?'textureRotated':m.rotated?'rotated':null;
+    if(rk){if((m[rk].tagName==='true')!==f.rot)m[rk].replaceWith(xdoc.createElement(f.rot?'true':'false'))}
+    else if(f.rot){const k=xdoc.createElement('key');k.textContent='textureRotated';f.el.append(k,xdoc.createElement('true'))}
+  }
+}
+function serialize(){
+  commitAll();
+  while(fd.firstChild)fd.removeChild(fd.firstChild);
+  for(const f of frames){const k=xdoc.createElement('key');k.textContent=f.name;fd.append(k,f.el)}
+  return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(xdoc).replace(/^<\?xml[^>]*\?>\s*/,'');
+}
+
+/* drawing */
+const corners=f=>[[f.x,f.y],[f.x+f.w,f.y],[f.x,f.y+f.h],[f.x+f.w,f.y+f.h]];
+const zf=()=>cv.getBoundingClientRect().width/cv.width||1;
+const hr=()=>Math.max(3,cfg.hs/zf());
+const hrb=f=>Math.max(3/zf(),hr()*Math.min(1.6,Math.max(.5,Math.min(f.w,f.h)*zf()/80)));
+function draw(){
+  if(!sheet)return;
+  cv.width=sheet.width;cv.height=sheet.height;
+  ctx.drawImage(sheet,0,0);
+  const bw=+$('bw').value/Math.max(zf(),.25);
+  ctx.lineWidth=bw;ctx.font=Math.max(10,12/zf())+'px sans-serif';ctx.textBaseline='top';
+  frames.forEach((f,i)=>{
+    if(f.hid)return;
+    ctx.strokeStyle=(i===sel||(multi&&ms.has(i)))?cfg.red:cfg.red+'80';ctx.lineWidth=(i===sel||(multi&&ms.has(i)))?bw*1.6:bw;ctx.strokeRect(f.x+bw/2,f.y+bw/2,f.w-bw,f.h-bw);
+    if($('lbl').checked||i===sel){ctx.fillStyle='#ff1a1a';ctx.fillText(f.name.replace(/\.png$/,''),f.x+bw+2,f.y+bw+2,Math.max(10,f.w-bw*2-4))}
+  });
+  if(multi)ms.forEach(i=>{const f=frames[i];if(f&&!f.hid){ctx.fillStyle='rgba(43,111,230,.25)';ctx.fillRect(f.x,f.y,f.w,f.h);ctx.strokeStyle='#2b6fe6';ctx.lineWidth=Math.max(1,3/zf());ctx.strokeRect(f.x,f.y,f.w,f.h)}});
+  if(sel>=0&&!multi&&!frames[sel].hid){
+    const f=frames[sel],r=hrb(f);
+    ctx.fillStyle='rgba(255,26,26,.15)';ctx.fillRect(f.x,f.y,f.w,f.h);
+    ctx.strokeStyle='#ff1a1a';ctx.fillStyle='#fff';ctx.lineWidth=Math.max(1,2/zf());
+    corners(f).forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill();ctx.stroke()});
+    const cx=f.x+f.w/2,cy=f.y+f.h/2;
+    if(Math.min(f.w,f.h)>r*3.5)[[cx,f.y],[cx,f.y+f.h],[f.x,cy],[f.x+f.w,cy]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill();ctx.stroke()});
+    ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);
+    ctx.lineWidth=Math.max(2,3/zf());ctx.stroke();
+  }
+  if(guides.length){ctx.save();ctx.strokeStyle='#00e5ff';ctx.lineWidth=Math.max(1,1.5/zf());ctx.setLineDash([6/zf(),4/zf()]);guides.forEach(g=>{ctx.beginPath();if(g[0]){ctx.moveTo(0,g[1]);ctx.lineTo(cv.width,g[1])}else{ctx.moveTo(g[1],0);ctx.lineTo(g[1],cv.height)}ctx.stroke()});ctx.restore()}
+  const nf=(multi&&ms.size)?[...ms]:sel>=0?[sel]:[];
+  if(nf.length){
+    ctx.textBaseline='top';ctx.textAlign='right';
+    nf.forEach(i=>{const f=frames[i];if(!f||f.hid)return;
+      const z=zf(),fs=Math.max(9/z,Math.min(f.w/8,f.h*.2,20/z)),lh=fs*1.25;ctx.font='bold '+fs+'px sans-serif';
+      const a='x '+fmt(f.x)+'  y '+fmt(f.y),b='w '+fmt(f.w)+'  h '+fmt(f.h),w=Math.max(ctx.measureText(a).width,ctx.measureText(b).width)+fs*.6,rx=f.x+f.w-bw-1,ry=f.y+bw+1;
+      ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(rx-w,ry,w,lh*2+fs*.3);
+      ctx.fillStyle='#fff';ctx.fillText(a,rx-fs*.3,ry+fs*.15);ctx.fillText(b,rx-fs*.3,ry+fs*.15+lh)});
+    ctx.textAlign='left';
+  }
+}
+function scale(){
+  const z=$('zoom').value/100;
+  cv.style.width=cv.width*z+'px';cv.style.height=cv.height*z+'px';
+  $('zv').textContent=$('zoom').value+'%';$('bv').textContent=$('bw').value+'px';draw();
+}
+function list(){
+  const q=$('q').value.toLowerCase();
+  $('sel').innerHTML=frames.map((f,i)=>f.name.toLowerCase().includes(q)?'<option value="'+i+'"'+(i===sel?' selected':'')+'>'+f.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</option>':'').join('');
+}
+function panel(){
+  cmpDot();
+  $('panel').style.display=frames.length?'block':'none';
+  $('bUndo').disabled=!hist.length;$('bRedo').disabled=!redo.length;
+  const has=sel>=0||(multi&&ms.size);
+  $('bAdd').disabled=!xdoc;$('bCopy').disabled=$('bDel').disabled=!has;
+  $('selp').style.display=has?'block':'none';
+  cv.style.touchAction=(sel>=0||multi)?'none':'auto';
+  const many=multi&&ms.size>1,hs=many?'none':'';
+  $('rn').parentElement.style.display=hs;$('ox').closest('.two').style.display=hs;$('xyRow').style.display=hs;$('szRow').style.display=hs;$('bRot').style.display=hs;$('bDlg').style.display=hs;
+  const tg=tgts();$('bEye').classList.toggle('hid',tg.length>0&&tg.every(i=>frames[i].hid));
+  const f=frames[sel];if(many){$('info').textContent=ms.size+' selected';return}if(!f)return;
+  if(document.activeElement!==$('rn'))$('rn').value=f.name;
+  $('info').textContent='x '+f.x+', y '+f.y+', w '+f.w+', h '+f.h+(f.rot?' (rotated)':'');
+  if(document.activeElement!==$('ox'))$('ox').value=fmt(f.ox);
+  if(document.activeElement!==$('oy'))$('oy').value=fmt(f.oy);
+  for(const[id,k]of[['inX','x'],['inY','y'],['inW','w'],['inH','h']])if(document.activeElement!==$(id))$(id).value=fmt(f[k]);
+}
+function refresh(){
+  if(sheet){$('empty').style.display='none';$('dli').disabled=false;scale()}
+  if(frames.length)$('dlp').disabled=false;
+  list();panel();
+  status(sheet&&frames.length?frames.length+' groups loaded.':sheet?'Image loaded. Now add the plist.':'Plist read. Now add the image.');
+}
+function select(i){sel=i;if(multi&&i>=0)ms.add(i);list();panel();draw()}
+
+/* history */
+function push(b,op){hist.push({b,a:snap(),op});redo=[];if(hist.length>100)hist.shift();panel()}
+function restore(a){frames=a.map(f=>({...f}));if(sel>=frames.length)sel=-1;ms.clear();list();panel();draw()}
+function undo(){
+  const e=hist.pop();if(!e)return;redo.push(e);
+  if(e.op)rotPx({x:e.op.x,y:e.op.y,w:e.op.h,h:e.op.w},!e.op.to);
+  restore(e.b);
+}
+function redoIt(){
+  const e=redo.pop();if(!e)return;hist.push(e);
+  if(e.op)rotPx({x:e.op.x,y:e.op.y,w:e.op.w,h:e.op.h},e.op.to);
+  restore(e.a);
+}
+
+/* actions */
+function rotPx(f,to){
+  const t=document.createElement('canvas');t.width=f.w;t.height=f.h;
+  t.getContext('2d').drawImage(sheet,f.x,f.y,f.w,f.h,0,0,f.w,f.h);
+  sc.clearRect(f.x,f.y,f.w,f.h);sc.save();sc.translate(f.x,f.y);
+  if(to){sc.translate(f.h,0);sc.rotate(Math.PI/2)}else{sc.translate(0,f.w);sc.rotate(-Math.PI/2)}
+  sc.drawImage(t,0,0);sc.restore();
+}
+function clampBox(f){
+  if(!sheet)return false;let ch=false;
+  const x=Math.min(Math.max(0,f.x),sheet.width-1),y=Math.min(Math.max(0,f.y),sheet.height-1);
+  if(x!==f.x||y!==f.y){f.x=x;f.y=y;ch=true}
+  const ew=Math.max(1,Math.min(f.w,sheet.width-f.x)),eh=Math.max(1,Math.min(f.h,sheet.height-f.y));
+  if(ew!==f.w||eh!==f.h){f.w=ew;f.h=eh;ch=true}
+  return ch;
+}
+function rotate(){
+  const f=frames[sel];if(!f)return;const to=!f.rot;
+  if(f.x+f.h>sheet.width||f.y+f.w>sheet.height){status('Not enough room on the sheet to rotate this group',true);return}
+  const b=snap(),op={x:f.x,y:f.y,w:f.w,h:f.h,to};
+  rotPx(f,to);[f.w,f.h]=[f.h,f.w];f.rot=to;push(b,op);panel();draw();
+  const o=frames.find(g=>g!==f&&!(g.x>=f.x+f.w||g.x+g.w<=f.x||g.y>=f.y+f.h||g.y+g.h<=f.y));
+  if(o)status('Rotated, but it now overlaps "'+o.name+'". Undo if you did not want that.',true);
+}
+function move(dx,dy){
+  const t=tgts();if(!t.length)return;const b=snap();
+  for(const i of t){const f=frames[i];
+    f.x=Math.round(Math.min(Math.max(0,f.x+dx*step),sheet.width-f.w));
+    f.y=Math.round(Math.min(Math.max(0,f.y+dy*step),sheet.height-f.h))}
+  push(b);panel();draw();
+}
+function setStep(n){step=Math.max(1,Math.round(n)||1);$('pad').style.display='grid';$('stepl').textContent='Moving '+step+' px per tap'}
+const uniq=n=>{const e=n.match(/\.\w+$/),b=e?n.slice(0,-e[0].length):n,x=e?e[0]:'';let k=2,t=n;while(frames.some(f=>f.name===t))t=b+'_'+k++ +x;return t};
+function add(){
+  if(!xdoc)return;
+  const b=snap(),t=frames[0];let el,rk='textureRect',ok='spriteOffset';
+  if(t){el=t.el.cloneNode(true);rk=t.rk;ok=t.ok}
+  else el=xdoc.importNode(new DOMParser().parseFromString('<dict><key>textureRect</key><string>{{0,0},{32,32}}</string><key>spriteOffset</key><string>{0,0}</string><key>spriteSize</key><string>{32,32}</string><key>spriteSourceSize</key><string>{32,32}</string><key>textureRotated</key><false/></dict>','text/xml').documentElement,true);
+  const m=pairs(el);if(m.spriteSourceSize)m.spriteSourceSize.textContent='{32,32}';
+  frames.push({name:uniq('new_group.png'),el,rk,ok,rot:false,x:0,y:0,w:32,h:32,ox:0,oy:0});
+  sel=frames.length-1;push(b);list();panel();draw();
+}
+function copy(){
+  const t=tgts();if(!t.length)return;const b=snap();
+  for(const i of t){const f=frames[i];frames.push({...f,hid:false,o:null,name:uniq(f.name.replace(/(\.\w+)?$/,'_copy$1')),el:f.el.cloneNode(true),x:Math.min(f.x+10,sheet.width-f.w),y:Math.min(f.y+10,sheet.height-f.h)})}
+  ms.clear();sel=frames.length-1;push(b);list();panel();draw();
+}
+function del(){
+  const t=tgts();if(!t.length)return;const b=snap();t.slice().reverse().forEach(i=>frames.splice(i,1));ms.clear();sel=-1;push(b);list();panel();draw();
+}
+
+/* files */
+function setSheet(i){
+  sheet=document.createElement('canvas');sheet.width=i.naturalWidth;sheet.height=i.naturalHeight;
+  sc=sheet.getContext('2d');sc.drawImage(i,0,0);origSig=sigOf(sheet);
+}
+function imgFrom(blob){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(blob)})}
+$('fImg').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;$('nImg').textContent=f.name;
+  try{setSheet(await imgFrom(f));refresh()}catch(x){status('Could not load that image',true)}
+};
+$('fPl').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  if((await f.slice(0,8).text())==='bplist00'){$('plMsg').textContent='only upload plist file in upload a plist button';e.target.value='';return}
+  $('plMsg').textContent='';$('nPl').textContent=f.name;fname=f.name.replace(/\.plist$/,'')+'-edited.plist';
+  try{load(await f.text());refresh()}catch(x){frames=[];xdoc=null;status(x.message,true);panel();draw()}
+};
+const save=(blob,name)=>{const a=document.createElement('a');a.download=name;a.href=URL.createObjectURL(blob);a.click()};
+$('dlp').onclick=()=>save(new Blob([serialize()],{type:'application/xml'}),fname);
+$('dli').onclick=()=>sheet.toBlob(b=>save(b,'edited-sheet.png'));
+
+/* panel wiring */
+$('zoom').oninput=scale;$('bw').oninput=scale;$('lbl').onchange=draw;$('q').oninput=list;
+$('sel').onchange=e=>select(+e.target.value);
+$('bUndo').onclick=undo;$('bRedo').onclick=redoIt;$('bAdd').onclick=add;$('bCopy').onclick=()=>{copy();status('Group copied. Only the box is copied, not the pixels.')};$('bDel').onclick=del;$('bRot').onclick=rotate;
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>setStep(+b.dataset.s));
+$('bC').onclick=()=>setStep(parseFloat($('cs').value));
+document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>DIR[b.dataset.d]());
+const DIR={up:()=>move(0,-1),down:()=>move(0,1),left:()=>move(-1,0),right:()=>move(1,0)};
+for(const[id,k]of[['ox','ox'],['oy','oy']]){
+  $(id).onfocus=()=>ob=snap();
+  $(id).oninput=()=>{const f=frames[sel];if(f){f[k]=parseFloat($(id).value)||0;draw()}};
+  $(id).onchange=()=>{if(ob)push(ob);ob=null};
+}
+let guides=[],clip={};
+function gcand(v,side,axis,self){
+  let r=[(cfg.gd||8)/zf(),null,null];if(!cfg.gs)return r;const gp=cfg.gg||0;
+  frames.forEach((g,i)=>{if(i===self||g.hid)return;const a=axis?g.y:g.x,b=a+(axis?g.h:g.w);
+    (side?[[b,b],[a,a],[a-gp,a]]:[[a,a],[b,b],[b+gp,b]]).forEach(c=>{const d=Math.abs(c[0]-v);if(d<r[0])r=[d,c[0],c[1]]})});
+  return r;
+}
+function gedge(v,side,axis,self){const c=gcand(v,side,axis,self);if(c[1]===null)return v;guides.push([axis,c[2]]);return c[1]}
+function gsnap(v,size,axis,self){const a=gcand(v,0,axis,self),b=gcand(v+size,1,axis,self),w=(b[1]!==null&&(a[1]===null||b[0]<a[0]))?b:a;if(w[1]===null)return v;guides.push([axis,w[2]]);return w===b?w[1]-size:w[1]}
+function fit(f){if(!sheet)return false;const x=f.x,y=f.y,w=f.w,h=f.h;f.x=Math.min(Math.max(0,f.x),sheet.width-1);f.y=Math.min(Math.max(0,f.y),sheet.height-1);f.w=Math.max(1,Math.min(f.w,sheet.width-f.x));f.h=Math.max(1,Math.min(f.h,sheet.height-f.y));return x!==f.x||y!==f.y||w!==f.w||h!==f.h}
+for(const[id,k]of[['inX','x'],['inY','y'],['inW','w'],['inH','h']]){
+  $(id).onfocus=()=>ob=snap();
+  $(id).oninput=()=>{const f=frames[sel],v=parseFloat($(id).value);if(!f||!sheet||isNaN(v))return;
+    const cx=f.x+f.w/2,cy=f.y+f.h/2;f[k]=(k==='w'||k==='h')?Math.max(1,sn(v)):sn(v);fit(f);
+    if((k==='w'||k==='h')&&!f.rot){f.ox+=(f.x+f.w/2)-cx;f.oy-=(f.y+f.h/2)-cy}
+    panel();draw()};
+  $(id).onchange=()=>{if(ob)push(ob);ob=null;panel()};
+}
+$('cSz').onclick=()=>{const f=frames[sel];if(f){clip.sz=[f.w,f.h];status('Size copied: '+f.w+'x'+f.h)}};
+$('cOf').onclick=()=>{const f=frames[sel];if(f){clip.of=[f.ox,f.oy,f.w,f.h];status('Offset copied: '+fmt(f.ox)+', '+fmt(f.oy))}};
+$('pSz').onclick=()=>{
+  if(!clip.sz)return status('Copy a size first.',true);const t=tgts();if(!t.length)return;const b=snap();let n=0;
+  for(const i of t){const f=frames[i],w0=f.w,h0=f.h;f.w=clip.sz[0];f.h=clip.sz[1];if(fit(f))n++;if(!f.rot){f.ox+=(f.w-w0)/2;f.oy-=(f.h-h0)/2}}
+  push(b);panel();draw();status('Size pasted on '+t.length+' group(s).'+(n?' '+n+' trimmed to stay inside the image.':''),!!n);
+};
+$('pOf').onclick=()=>{
+  if(!clip.of)return status('Copy an offset first.',true);const t=tgts();if(!t.length)return;const b=snap();let d=0;
+  for(const i of t){const f=frames[i];if(f.w!==clip.of[2]||f.h!==clip.of[3])d++;f.ox=clip.of[0];f.oy=clip.of[1]}
+  push(b);panel();draw();status('Offset pasted on '+t.length+' group(s).'+(d?' Warning: '+d+' have a different size than the copied group, so the sprite may look shifted. Use undo if needed.':''),!!d);
+};
+$('rn').onfocus=()=>ob=snap();
+$('rn').oninput=()=>{const f=frames[sel];if(f){f.name=$('rn').value||f.name;list()}};
+$('rn').onchange=()=>{if(ob)push(ob);ob=null;panel()};
+
+/* canvas pointer */
+const pos=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}};
+const near=(p,x,y,r)=>Math.hypot(p.x-x,p.y-y)<=r;
+cv.addEventListener('pointerdown',e=>{
+  if(!frames.length)return;
+  const p=pos(e);let d=null;
+  if(sel>=0&&!multi&&!frames[sel].hid){
+    const f=frames[sel],r=Math.max(hrb(f)*1.3,10/zf());
+    if(near(p,f.x+f.w/2,f.y+f.h/2,r))d={t:'move'};
+    else corners(f).forEach((c,i)=>{if(!d&&near(p,c[0],c[1],r))d={t:'size',a:corners(f)[3-i]}});
+    if(!d&&Math.min(f.w,f.h)>r*3.5)[['t',f.x+f.w/2,f.y],['b',f.x+f.w/2,f.y+f.h],['l',f.x,f.y+f.h/2],['r',f.x+f.w,f.y+f.h/2]].forEach(h=>{if(!d&&near(p,h[1],h[2],r))d={t:'edge',e:h[0]}});
+  }
+  if(!d){
+    let best=-1,ba=1e18;
+    frames.forEach((f,i)=>{if(!f.hid&&p.x>=f.x&&p.x<=f.x+f.w&&p.y>=f.y&&p.y<=f.y+f.h&&f.w*f.h<ba){ba=f.w*f.h;best=i}});
+    if(multi){
+      if(best>=0){if(ms.has(best))d={t:'move',multi:true,tog:best};else{ms.add(best);sel=best;list();panel();draw();d={t:'move',multi:true}}}
+    }else if(sel>=0){
+      const f=frames[sel];
+      if(!f.hid&&p.x>=f.x&&p.x<=f.x+f.w&&p.y>=f.y&&p.y<=f.y+f.h)d={t:'move'};
+      else if(best<0)select(-1);
+    }else{select(best);if(best>=0)d={t:'move'}}
+  }
+  if(d){const f=frames[sel];d.p=p;d.s={...f};d.b=snap();d.mv=false;d.id=e.pointerId;drag=d;cv.setPointerCapture(e.pointerId);e.preventDefault()}
+});
+cv.addEventListener('pointermove',e=>{
+  const p=pos(e);
+  if(drag&&(e.pointerId!==drag.id||(e.pointerType==='mouse'&&!e.buttons)))endDrag();
+  if(drag){
+    guides=[];
+    const f=frames[sel],s=drag.s,W=cv.width,H=cv.height;drag.mv=!drag.multi;
+    if(drag.multi){
+      const dx=p.x-drag.p.x,dy=p.y-drag.p.y;
+      if(!drag.mv&&Math.abs(dx)+Math.abs(dy)<4)return;
+      drag.mv=true;drag.tog=null;
+      for(const i of ms){const g=frames[i],o=drag.b[i];g.x=Math.round(Math.min(Math.max(0,o.x+dx),W-g.w));g.y=Math.round(Math.min(Math.max(0,o.y+dy),H-g.h))}
+    }else if(drag.t==='move'){
+      const mx=gsnap(s.x+p.x-drag.p.x,f.w,0,sel),my=gsnap(s.y+p.y-drag.p.y,f.h,1,sel);
+      f.x=sn(Math.min(Math.max(0,mx),W-f.w));
+      f.y=sn(Math.min(Math.max(0,my),H-f.h));
+    }else if(drag.t==='edge'){
+      const sd=drag.e;
+      if(sd==='l'||sd==='r'){const nx=gedge(Math.min(Math.max(0,p.x),W),sd==='r'?1:0,0,sel),a=sd==='l'?s.x+s.w:s.x;f.x=sn(Math.min(a,nx));f.w=Math.max(1,sn(Math.abs(nx-a)))}
+      else{const ny=gedge(Math.min(Math.max(0,p.y),H),sd==='b'?1:0,1,sel),a=sd==='t'?s.y+s.h:s.y;f.y=sn(Math.min(a,ny));f.h=Math.max(1,sn(Math.abs(ny-a)))}
+      if(!f.rot){f.ox=s.ox+((f.x+f.w/2)-(s.x+s.w/2));f.oy=s.oy-((f.y+f.h/2)-(s.y+s.h/2))}
+    }else{
+      const a=drag.a;let nx=Math.min(Math.max(0,p.x),W),ny=Math.min(Math.max(0,p.y),H);
+      nx=gedge(nx,nx>=a[0]?1:0,0,sel);ny=gedge(ny,ny>=a[1]?1:0,1,sel);
+      f.x=sn(Math.min(a[0],nx));f.y=sn(Math.min(a[1],ny));
+      f.w=Math.max(1,sn(Math.abs(nx-a[0])));f.h=Math.max(1,sn(Math.abs(ny-a[1])));
+      if(!f.rot){f.ox=s.ox+((f.x+f.w/2)-(s.x+s.w/2));f.oy=s.oy-((f.y+f.h/2)-(s.y+s.h/2))}
+    }
+    panel();draw();return;
+  }
+  const f=frames.slice().reverse().find(f=>p.x>=f.x&&p.x<=f.x+f.w&&p.y>=f.y&&p.y<=f.y+f.h),t=$('tip');
+  if(f){t.textContent=f.name+'  ('+f.w+'x'+f.h+')';t.style.left=e.clientX+12+'px';t.style.top=e.clientY+12+'px';t.style.display='block'}else t.style.display='none';
+});
+const endDrag=()=>{if(drag&&drag.mv)push(drag.b);else if(drag&&drag.tog!=null){ms.delete(drag.tog);sel=ms.size?[...ms].pop():-1;list();panel();draw()}drag=null;if(guides.length){guides=[];draw()}};
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);cv.addEventListener('lostpointercapture',endDrag);window.addEventListener('blur',()=>{drag=null});document.addEventListener('touchend',e=>{if(!e.touches.length)endDrag()});
+cv.addEventListener('pointerleave',()=>$('tip').style.display='none');
+
+/* result zoom */
+const vw=document.querySelector('.view');
+function setZoom(z){
+  const o=$('zoom').value/100,cx=(vw.scrollLeft+vw.clientWidth/2)/o,cy=(vw.scrollTop+vw.clientHeight/2)/o;
+  $('zoom').value=Math.round(Math.min(400,Math.max(10,z)));scale();
+  const n=$('zoom').value/100;vw.scrollLeft=cx*n-vw.clientWidth/2;vw.scrollTop=cy*n-vw.clientHeight/2;
+}
+$('zIn').onclick=()=>setZoom(+$('zoom').value*1.25);
+$('zOut').onclick=()=>setZoom(+$('zoom').value/1.25);
+$('zFit').onclick=()=>{if(sheet){setZoom(Math.min(vw.clientWidth/sheet.width,vw.clientHeight/sheet.height)*100);vw.scrollLeft=vw.scrollTop=0}};
+vw.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(+$('zoom').value*(e.deltaY<0?1.1:.9))}},{passive:false});
+let pd=0,pz=0,pa=false;
+const pdist=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+vw.addEventListener('touchstart',e=>{if(e.touches.length===2){drag=null;pd=pdist(e);pz=+$('zoom').value;pa=false}},{passive:true});
+vw.addEventListener('touchmove',e=>{if(e.touches.length===2&&pd){if(!pa){if(Math.abs(pdist(e)/pd-1)<.1)return;pa=true;pd=pdist(e);pz=+$('zoom').value;return}e.preventDefault();setZoom(pz*pdist(e)/pd)}},{passive:false});
+vw.addEventListener('touchend',e=>{if(e.touches.length<2){pd=0;pa=false}});
+vw.addEventListener('touchcancel',()=>{pd=0;pa=false});
+
+/* AI helper */
+let chat=[],pend=null;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PROMPT='You are the helper inside a Geometry Dash plist editor web page. Be brief. Reply ONLY with JSON {"reply":string,"changes":[{"i":number,"name":string,"x":number,"y":number,"w":number,"h":number,"ox":number,"oy":number}]} where every change field except i is optional. "changes" must be [] unless the user asked to edit groups or asked for new names. Positions are on the spritesheet in pixels. i is the group index. Page features: click a group to select it, drag + to move, drag O to resize, Rotate 90 button, nudge buttons +1/+5/+10/custom with arrows, undo <[ and redo ]>, add + copy and delete group buttons, rename and search, zoom -/Fit/+ and pinch, keybinds button (keys or tap counts), Auto saved button (saves every 20 minutes), download edited plist and image.';
+function aiBox(){
+  modal('<span class="x" id="mx">×</span><h3>🤖 Helper</h3><div class="tools"><button class="alt" id="aiCheck">Check plist</button><button class="alt" id="aiName">Name groups</button></div><div id="aiLog" style="text-align:left;font-size:14px;max-height:40vh;overflow:auto;margin:8px 0"></div><div id="aiApply"></div><input type="text" id="aiQ" placeholder="Ask or give a command..."><button id="aiGo">Send</button>');
+  $('mx').onclick=closeM;
+  $('aiGo').onclick=()=>ai($('aiQ').value);
+  $('aiCheck').onclick=()=>ai('Check my plist for mistakes (boxes outside the image, size 0, duplicate names, overlaps). List each one with the group name.');
+  $('aiName').onclick=()=>ai('Suggest better names for my groups and return them as rename changes.');
+  log();
+}
+function log(){
+  const l=$('aiLog');if(!l)return;
+  l.innerHTML=chat.map(m=>'<p><b>'+(m[0]==='you'?'You':'🤖')+':</b> '+esc(m[1])+'</p>').join('');l.scrollTop=1e9;iconify(l);
+  $('aiApply').innerHTML=pend?'<p style="font-size:13px">'+pend.length+' change(s) ready:</p><button id="aiOk">Apply</button><button class="alt" id="aiNo">Skip</button>':'';
+  if(pend){$('aiOk').onclick=applyAI;$('aiNo').onclick=()=>{pend=null;log()}}
+}
+async function ai(q){
+  q=(q||'').trim();if(!q)return;
+  chat.push(['you',q]);pend=null;log();$('aiQ').value='';
+  try{
+    const s=await claude.use('sample');
+    if(!s){chat.push(['ai','The AI helper is not available here.']);log();return}
+    const data=frames.map((f,i)=>({i,name:f.name,x:f.x,y:f.y,w:f.w,h:f.h,rot:f.rot,ox:f.ox,oy:f.oy}));
+    const r=await s.json(PROMPT+'\nImage size: '+(sheet?sheet.width+'x'+sheet.height:'none')+'\nGroups: '+JSON.stringify(data)+'\nChat so far: '+JSON.stringify(chat.slice(-8))+'\nUser: '+q);
+    chat.push(['ai',r.reply||'Done.']);
+    pend=(r.changes&&r.changes.length)?r.changes:null;
+  }catch(e){chat.push(['ai',e&&e.code==='not_granted'?'Permission was not given.':'Something went wrong, try again.'])}
+  log();
+}
+function applyAI(){
+  const b=snap();let cl=false;
+  for(const c of pend){
+    const f=frames[c.i];if(!f)continue;
+    if(typeof c.name==='string'&&c.name)f.name=c.name;
+    for(const k of['x','y','w','h'])if(typeof c[k]==='number')f[k]=Math.max(k==='w'||k==='h'?1:0,Math.round(c[k]));
+    for(const k of['ox','oy'])if(typeof c[k]==='number')f[k]=c[k];
+    if(clampBox(f))cl=true;
+  }
+  pend=null;push(b);list();panel();draw();
+  chat.push(['ai','Applied.'+(cl?' Some boxes were trimmed to stay inside the image.':'')+' Use <[ to undo.']);log();
+}
+$('bAI').onclick=aiBox;
+
+/* icons */
+const S=d=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+d+'</svg>';
+const IC={
+'🤖':S('<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 16h5"/><circle cx="9.5" cy="12.5" r=".6"/><circle cx="14.5" cy="12.5" r=".6"/><circle cx="12" cy="4" r="1"/>'),
+'⌨':S('<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'),
+'🔄':S('<path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/>'),
+'♻':S('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+'⬆':S('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+'⬇':S('<path d="M12 5v14M6 13l6 6 6-6"/>'),
+'⬅':S('<path d="M19 12H5M11 6l-6 6 6 6"/>'),
+'➡':S('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+'👆':S('<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/>'),
+'👁':S('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+'🖲':S('<circle cx="12" cy="9" r="5"/><rect x="4" y="16" width="16" height="5" rx="2"/>'),
+'📄':S('<path d="M6 3h8l4 4v14H6zM14 3v4h4"/><rect x="8" y="10" width="8" height="6" rx="2"/><path d="M12 10V8.5"/><circle cx="10.5" cy="13" r=".6"/><circle cx="13.5" cy="13" r=".6"/>'),
+'▢+':S('<path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/>')};
+const ICRE=/(🤖|⌨|🔄|♻|⬆|⬇|⬅|➡|👆|👁|🖲|📄|▢\+)\uFE0F?/gu;
+function iconify(r){
+  const w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT),ns=[];
+  while(w.nextNode())ns.push(w.currentNode);
+  for(const n of ns){
+    if(/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName))continue;
+    const t=n.nodeValue;ICRE.lastIndex=0;if(!ICRE.test(t))continue;
+    const sp=document.createElement('span');
+    sp.innerHTML=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(ICRE,(m,k)=>IC[k]);
+    n.replaceWith(...sp.childNodes);
+  }
+}
+
+/* eye, multi */
+const tgts=()=>multi&&ms.size?[...ms].sort((a,b)=>a-b):(sel>=0?[sel]:[]);
+$('bEye').onclick=()=>{const t=tgts();if(!t.length)return;const b=snap(),h=!t.every(i=>frames[i].hid);t.forEach(i=>frames[i].hid=h);push(b);panel();draw()};
+function setMulti(v){multi=v;ms.clear();if(v&&sel>=0)ms.add(sel);const m=$('bMulti');m.classList.toggle('mm-on',v);m.classList.toggle('mm-off',!v);panel();draw()}
+$('bMulti').onclick=()=>setMulti(!multi);
+setMulti(false);
+
+/* offline helper */
+let olog=[];
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9+<>\[\]\-. ]/g,' ').replace(/\s+/g,' ').trim();
+const lc=s=>s.toLowerCase().replace(/\.png$/,'');
+const find=n=>{n=lc(n.trim());const i=frames.findIndex(f=>lc(f.name)===n);return i>=0?i:frames.findIndex(f=>lc(f.name).includes(n))};
+const miss=n=>{const c=frames.filter(f=>lc(f.name).includes(lc(n).slice(0,3))).slice(0,5);return{text:'I cannot find a group called "'+n+'". '+(c.length?'Closest: '+c.map(f=>f.name).join(', '):'')}};
+const KB=[
+['why is my sprite cut off',['cut off','cut','cropped','clipped'],'The red box is smaller than the sprite. Resize it so it covers the whole sprite.'],
+['why do I see part of another sprite',['another sprite','other sprite','neighbor'],'The box is too big and overlaps its neighbor. Shrink it to the exact edges.'],
+['why is my sprite in the wrong place',['wrong place','wrong position','shifted'],'Check the offset. Edit Offset X and Y in the panel.'],
+['why is my sprite sideways',['sideways','upside down','turned'],'The rotated setting does not match the pixels. Use Rotate 90, which changes both together.'],
+['why is it blurry',['blurry','blur','fuzzy'],'Use whole numbers for positions, and make sure the image and plist have the same quality (normal, -hd, -uhd).'],
+['why does the game crash',['crash','crashes','not loading','freezes'],'Common causes are broken XML, duplicate names, or a missing frames section. Say "check my plist".'],
+['why is my sprite missing in the game',['missing','not showing','invisible'],'The group name must match what the game looks for, including .png and capital letters.'],
+['why do two groups have the same name',['duplicate','same name','twice'],'The game only uses one of them. Rename one. Say "check my plist" to find them.'],
+['why did my change not show up',['no change','not changed','old file','nothing changed'],'You may be using the old file. After a rotate, download both the plist and the image.'],
+['why is there a white edge',['white edge','thin line','halo'],'The box includes empty pixels. Shrink it by 1px.'],
+['why do the red borders look wrong',['borders wrong','wrong borders','does not match','mismatch'],'The image and plist do not match. Check they have the same quality, like both -hd.'],
+['why can I not rotate this group',['cant rotate','cannot rotate','no room'],'There is not enough room on the sheet to the right or below. Move the group first.'],
+['what is a group',['group','groups'],'A group is one name in the plist, shown as one red border.'],
+['what is the plus in the middle',['plus','middle','drag handle'],'Drag the + in the middle of a group to move it.'],
+['what are the circles',['circles','corner','corners','handles'],'Drag the circles on the corners to resize a group.'],
+['what is offset',['offset','offsets','spriteoffset'],'The offset shifts where the sprite is drawn in the game. Edit Offset X and Y in the panel.'],
+['what is undo',['undo','redo'],'<[ is undo and ]> is redo.'],
+['what are add copy and delete',['add','copy','delete','trash'],'+ adds a group, the refresh icon copies the selected group, and the trash icon deletes it.'],
+['what is rotate',['rotate','rotation'],'Rotate 90 turns the sprite and updates the plist to match. Download both files after.'],
+['what are the nudge buttons',['nudge','arrows','+1','+5','+10'],'Pick +1, +5, +10 or your own number, then tap an arrow to move the group.'],
+['what are keybinds',['keybind','keybinds','shortcut','shortcuts','keyboard'],'The keyboard icon lets you give each button a key or a tap count.'],
+['what is the tap button',['tap button','tap'],'The floating tap button runs a button when you tap it your chosen number of times fast.'],
+['what is auto saved',['autosave','auto saved','saved'],'Your work is saved every 20 minutes in your browser. The Auto saved button keeps the last 10.'],
+['how do I zoom',['zoom','fit','pinch'],'Use the minus, Fit and plus buttons above the result, or pinch with two fingers.'],
+['what are the download buttons',['download','export'],'One button saves the edited plist and the other saves the edited image.'],
+['what is the eye button',['eye','hide','hidden'],'The eye hides or shows the red box of the selected group. It only changes the view.'],
+['what is multi select',['multi','multiple','many'],'The round button turns multi mode on (blue) or off (red). In multi mode, tap groups to select several.'],
+['how do I search for a group',['search','find'],'Type in the search box above the group list.'],
+['how do I rename a group',['rename','name'],'Select the group and edit its name in the panel.'],
+['how do I upload files',['upload','load','open','import'],'Tap the Image box, then the Plist box at the top left.'],
+['how do I move a group',['move','drag'],'Drag the + in the middle, or use the nudge buttons and arrows.'],
+['how do I resize a group',['resize','bigger','smaller'],'Drag a corner circle of the selected group.'],
+['what is texture rect',['texturerect','spritesize','spritesourcesize','texturerotated'],'These are the plist values for a group: its box on the sheet, its size, its original size, and whether it is rotated.'],
+['hi',['hi','hello','hey','yo','sup'],'Hi! I can check your plist, run commands, and explain buttons. What do you need?'],
+['thanks',['thanks','thank','thx','ty'],'You are welcome!'],
+['what can you do',['what can you do','help','menu'],'I can check your plist ("check my plist"), run commands ("move all 10px right", "rename to icon_1", "delete selected"), explain buttons ("what is offset") and answer "why is my sprite cut off". Copy for Claude sends harder questions to a real chat.'],
+['who are you',['who are you','what are you','your name'],'I am the helper built into this page. I use premade answers, not a real AI.'],
+['ok',['ok','okay','cool','nice'],'Anything else?'],
+['sorry',['sorry'],'No problem!'],
+['bye',['bye','goodbye','cya'],'Bye! Your work is autosaved.']];
+const EX={
+'why is my sprite cut off':['cut in half','half missing','missing part','crop','box too small'],
+'why do I see part of another sprite':['extra pixels','piece of another','bleeding','box too big','overlap'],
+'why is my sprite in the wrong place':['not centered','off center','misaligned','wrong spot','too far'],
+'why is my sprite sideways':['rotated wrong','flipped','90 degrees','wrong rotation','rotated'],
+'why is it blurry':['pixelated','low quality','not sharp','smooth'],
+'why does the game crash':['crashes','crashing','freezes','freeze','black screen','stuck loading','won t open'],
+'why is my sprite missing in the game':['not showing','invisible','disappeared','doesn t show','not visible','missing'],
+'why do two groups have the same name':['same name','duplicate name'],
+'why did my change not show up':['not saved','didn t save','nothing changed','not updating','not updated','refresh'],
+'why is there a white edge':['white line','white border','halo','edge','white lines'],
+'why do the red borders look wrong':['red box wrong','borders wrong','red lines','weird borders'],
+'why can I not rotate this group':['can t rotate','cannot rotate','rotate disabled'],
+'what is a group':['groups','sprite','frame'],
+'how do I upload files':['upload','add image','add plist','import','open file','choose file'],
+'how do I zoom':['zoom','pinch','bigger','smaller'],
+'what are the download buttons':['download','export','get file'],
+'hi':['hiya','howdy'],'thanks':['thank you','appreciate'],'ok':['alright','got it','fine'],'sorry':['my bad','oops'],'bye':['bye bye','see you','later','good bye']
+};
+KB.forEach(e=>{if(EX[e[0]])e[1].push(...EX[e[0]])});
+KB.find(e=>e[0]==='what can you do')[2]='I can check your plist ("check my plist"), explain buttons ("what is offset"), and answer problems ("why is my sprite cut off"). Commands start with ~ : ~move all 10px right, ~rename to icon_1, ~delete selected, ~undo. For harder questions use Copy for Claude.';
+KB.push(
+['good morning',['good morning','good afternoon','good evening'],'Hello! What do you need help with?'],
+['good night',['good night','goodnight','gn'],'Good night! Your work is autosaved.'],
+['how are you',['how are you','how are u','whats up','what s up'],'I am a premade list, so I am always the same. How can I help?'],
+['please help',['please help','help me'],'Sure. Tell me what is wrong, for example "why is my sprite missing", or type "check my plist".'],
+['are you ai',['are you ai','are you real','are you a robot','are you human','are you a bot'],'I am a script with premade answers, not a real AI.'],
+['are you claude',['are you claude','are you chatgpt'],'No. This is the offline helper. Copy for Claude sends your question to a real Claude chat.'],
+['do you work offline',['offline','without internet'],'Yes, I work without internet. Only the zip tool for packs needs a connection to load.'],
+['you are wrong',['you are wrong','you re wrong','wrong answer','not helpful'],'Sorry! My answers are premade, so I can miss. Try another wording, or use Copy for Claude.'],
+['who made you',['who made you','who made this','who created'],'I was made for this tool, with a list of premade answers.'],
+['joke',['joke'],'Why did the sprite leave? It was cut off.'],
+['bored',['bored'],'Try the animation preview!'],
+['i love this',['i love this','this is cool','awesome','amazing'],'Glad you like it!'],
+['this is broken',['this is broken','i hate this','bug','not working','does not work','doesn t work'],'Sorry! Tell me what is wrong, for example "why is my sprite missing", or run "check my plist".'],
+['i do not understand',['i don t understand','dont understand','confused'],'Which part? Ask "what is <button>" or "how do I <thing>".'],
+['what is the pack builder',['pack builder','texture pack','pack'],'The pack builder keeps your sheets (.png and .plist) in one list. You can load a sheet into the editor and make a .zip pack with a name, author, version and thumbnail.'],
+['what is the load button',['load button','load sheet','load'],'Load puts a sheet from the pack builder into the editor. Your edits are synced back to that sheet.'],
+['how do I make the pack',['make the pack','make pack','zip','download pack'],'Open Pack, add your sheets, tap Make the pack, then fill in the name, author, version and thumbnail.'],
+['what are settings',['settings','setting','gear'],'Settings has options like animation speed, names on the boxes, dark mode, and resetting keybinds or data.'],
+['what are manual saves',['manual save','manual saves','save slot'],'The save button makes a manual save you can open again later. Autosave is separate.'],
+['what is the game preview',['game preview','preview','result box'],'The game preview shows how your groups might look in the game. It is a guess, so test in the game too.'],
+['what is the animation preview',['animation','animate','fps'],'The play button in Game preview plays your groups as an animation. Animation speed is in Settings.'],
+['what is the pre-test check',['pre-test','pre test','pretest','before testing'],'Pre-test check looks for problems before you test the plist in the game, like boxes outside the image or the same name used twice.'],
+['what is revert group',['revert','reset group','restore group'],'Revert group puts the selected group back to how it was when you loaded it.'],
+['why is my plist not loading',['not loading','won t load','invalid plist','plist error'],'The plist must be a Geometry Dash plist (XML). Open it in a text editor and check that it starts with <?xml. Then upload it again.'],
+['why is the preview different from the game',['preview different','looks different in game','not same as game'],'The preview is only a guess. Run Pre-test check, then test in the game to be sure.']
+);
+
+function cmd(q){
+  let m;
+  if(/^undo$/i.test(q))return{text:'Undo the last step.',fn:undo};
+  if(/^redo$/i.test(q))return{text:'Redo the step.',fn:redoIt};
+  if(/^zoom in$/i.test(q))return{text:'Zoom in.',fn:()=>setZoom(+$('zoom').value*1.25)};
+  if(/^zoom out$/i.test(q))return{text:'Zoom out.',fn:()=>setZoom(+$('zoom').value/1.25)};
+  if(!/^(hide|show|delete|remove|copy|duplicate|rotate|add|select|move|rename|resize|set offset)/i.test(q))return null;
+  if(!frames.length||!sheet)return{text:'Load an image and a plist first.'};
+  const sl=()=>tgts().length?null:{text:'Select a group first.'};
+  if(/^(hide|show)( selected)?$/i.test(q))return sl()||{text:'Hide or show the selected group.',fn:()=>$('bEye').click()};
+  if(/^(delete|remove)( selected)?$/i.test(q))return sl()||{text:'Delete the selected group.',fn:del};
+  if(/^(copy|duplicate)( selected)?$/i.test(q))return sl()||{text:'Copy the selected group.',fn:copy};
+  if(/^add( a)?( new)? group$/i.test(q))return{text:'Add a new 32x32 group at the top left.',fn:add};
+  if(/^rotate( selected)?$/i.test(q))return sl()||{text:'Rotate the selected group 90 degrees. This changes the image too, so download both files.',fn:rotate};
+  if(m=q.match(/^select (.+)$/i)){const i=find(m[1]);return i<0?miss(m[1]):{text:'Select '+frames[i].name+'.',fn:()=>select(i)}}
+  if(m=q.match(/^(?:delete|remove) group (\d+)$/i)){const i=+m[1]-1;return frames[i]?{text:'Delete group '+m[1]+' ('+frames[i].name+').',fn:()=>{const b=snap();frames.splice(i,1);ms.clear();sel=-1;push(b);list();panel();draw()}}:{text:'There is no group '+m[1]+'. You have '+frames.length+' groups.'}}
+  if(m=q.match(/^move (all|selected|.+?) (\d+) ?(?:px|pixels?)? ?(left|right|up|down)$/i)){
+    const w=m[1].toLowerCase(),ix=w==='all'?frames.map((_,i)=>i):w==='selected'?tgts():[find(m[1])];
+    if(!ix.length||ix[0]<0)return w==='selected'?{text:'Select a group first.'}:miss(m[1]);
+    const k=+m[2],d=m[3].toLowerCase(),dx=d==='left'?-k:d==='right'?k:0,dy=d==='up'?-k:d==='down'?k:0;
+    return{text:'Move '+(w==='all'?'all '+ix.length+' groups':ix.length+' group(s)')+' '+k+' px '+d+'.',fn:()=>{const b=snap();ix.forEach(i=>{const f=frames[i];f.x=Math.round(Math.min(Math.max(0,f.x+dx),sheet.width-f.w));f.y=Math.round(Math.min(Math.max(0,f.y+dy),sheet.height-f.h))});push(b);panel();draw()}}}
+  if(m=q.match(/^rename all to (.+)$/i)){const base=m[1].trim();return{text:'Rename all groups to '+base+'_1, '+base+'_2, ...',fn:()=>{const b=snap();frames.forEach((f,i)=>f.name=base+'_'+(i+1)+'.png');push(b);list();panel();draw()}}}
+  if(m=q.match(/^rename (?:selected )?to (.+)$/i))return sl()||{text:'Rename the selected group to '+m[1].trim()+'.',fn:()=>{const b=snap();frames[tgts()[0]].name=m[1].trim();push(b);list();panel();draw()}};
+  if(m=q.match(/^resize (?:selected )?to (\d+) ?x ?(\d+)$/i))return sl()||{text:'Resize the selected group to '+m[1]+'x'+m[2]+'.',fn:()=>{const b=snap(),f=frames[tgts()[0]];f.w=+m[1];f.h=+m[2];const cl=clampBox(f);push(b);panel();draw();if(cl)status('Resized, but trimmed to stay inside the image.',true)}};
+  if(m=q.match(/^set offset to (-?[\d.]+),? (-?[\d.]+)$/i))return sl()||{text:'Set the offset of the selected group to '+m[1]+', '+m[2]+'.',fn:()=>{const b=snap(),f=frames[tgts()[0]];f.ox=+m[1];f.oy=+m[2];push(b);panel();draw()}};
+  return null;
+}
+function runCheck(){
+  if(!frames.length)return{who:'bot',text:'Load an image and a plist first.'};
+  const pr=[],nm2={};
+  frames.forEach((f,i)=>{
+    if(f.w<=0||f.h<=0)pr.push([i,f.name+' has size 0.']);
+    if(sheet&&(f.x<0||f.y<0||f.x+f.w>sheet.width||f.y+f.h>sheet.height))pr.push([i,f.name+' goes outside the image.']);
+    (nm2[f.name]=nm2[f.name]||[]).push(i);
+  });
+  for(const n in nm2)if(nm2[n].length>1)pr.push([nm2[n][1],n+' is used '+nm2[n].length+' times.']);
+  for(let a=0;a<frames.length&&pr.length<40;a++)for(let b=a+1;b<frames.length;b++){const p=frames[a],q=frames[b];if(p.x<q.x+q.w&&q.x<p.x+p.w&&p.y<q.y+q.h&&q.y<p.y+p.h)pr.push([a,p.name+' overlaps '+q.name+'.'])}
+  if(!pr.length)return{who:'bot',text:'I checked '+frames.length+' groups and found no mistakes.'};
+  return{who:'bot',keep:true,text:'Found '+pr.length+' problem(s):\n'+pr.slice(0,8).map(x=>'- '+x[1]).join('\n'),btns:pr.slice(0,4).map(x=>({label:'Select '+frames[x[0]].name,fn:()=>select(x[0])}))};
+}
+function answer(q){
+  const P=cfg.pfx||'~';let c=null;
+  if(q.startsWith(P)){q=q.slice(P.length).trim();c=cmd(q)||{text:'I do not know that command. Type "what can you do" to see them.'}}
+  else{const h=cmd(q);if(h)return{who:'bot',text:'To run a command, start with '+P+' . Example: '+P+q}}
+  if(c)return c.fn?{who:'bot',text:c.text,btns:[{label:'Apply',fn:()=>{c.fn();olog.push({who:'bot',text:'Done. Use undo to go back.'})}},{label:'Skip',fn:()=>{olog.push({who:'bot',text:'Skipped. Nothing was changed.'})}}]}:{who:'bot',text:c.text};
+  const t=norm(q);
+  if(/\b(check|validate|scan)\b|mistake/.test(t))return runCheck();
+  const ws=t.split(' ');
+  let best=null,bs=0;
+  for(const e of KB){let s=0;for(const k of e[1])if(k.includes(' ')?t.includes(k):ws.some(w=>w===k||w===k+'s'))s+=k.includes(' ')?2:1;if(s>bs){bs=s;best=e}}
+  if(best)return{who:'bot',text:best[2].split('~').join(P)};
+  let sg='check my plist',ob2=0;
+  for(const e of KB){const n=e[0].split(' ').filter(w=>w.length>2&&ws.includes(w)).length;if(n>ob2){ob2=n;sg=e[0]}}
+  const msg={who:'bot',text:'I do not understand your message. Please send a message that I understand.'};
+  msg.btns=[{label:'delete and change with "'+sg+'"',fn:()=>{const i=olog.indexOf(msg);olog.splice(i-1,2);oSend(sg)}}];
+  return msg;
+}
+function oRender(){
+  const l=$('oLog');if(!l)return;l.innerHTML='';
+  olog.forEach(m=>{
+    const p=document.createElement('p');p.innerHTML='<b>'+(m.who==='you'?'You':'Helper')+':</b> ';p.append(m.first?'Hi! I am the offline helper. I use premade answers, so I can be wrong. Type "what can you do", or start a command with '+(cfg.pfx||'~')+' (example: '+(cfg.pfx||'~')+'undo).':m.text);if(m.ans){const w=document.createElement('div');w.style.cssText='opacity:.45;font-size:11px;margin-top:2px';w.textContent='This answer might be wrong. Use Copy for Claude for harder questions.';p.append(w)}l.append(p);
+    (m.btns||[]).forEach(b=>{const x=document.createElement('button');x.className='alt';x.textContent=b.label;x.onclick=()=>{b.fn();if(!m.keep)m.btns=null;oRender()};l.append(x)});
+  });
+  iconify(l);l.scrollTop=l.scrollHeight;
+}
+function oSend(q){
+  q=(q||'').trim();if(!q)return;
+  olog.push({who:'you',text:q});if($('oQ'))$('oQ').value='';
+  const an=answer(q);an.ans=true;olog.push(an);oRender();
+}
+function copyClaude(){
+  const lq=[...olog].reverse().find(m=>m.who==='you');
+  const g=frames.slice(0,60).map((f,i)=>i+': '+f.name+' x'+f.x+' y'+f.y+' w'+f.w+' h'+f.h+(f.rot?' rotated':'')+' offset '+fmt(f.ox)+','+fmt(f.oy)).join('\n');
+  const txt='I am editing a Geometry Dash plist.\nImage size: '+(sheet?sheet.width+'x'+sheet.height:'none')+'\nGroups ('+frames.length+'):\n'+g+'\n\nMy question: '+(lq?lq.text:'');
+  const ok=()=>{olog.push({who:'bot',text:'Copied. Paste it in a chat with Claude.'});oRender()};
+  function fb(){const a=document.createElement('textarea');a.value=txt;document.body.append(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove()}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb();
+}
+function offBox(){
+  modal('<span class="x" id="mx">×</span><h3>📄 Helper</h3><div class="tools"><button class="alt" id="oCheck">Check plist</button><button class="alt" id="oCopy">Copy for Claude</button></div><div id="oLog" style="text-align:left;font-size:14px;max-height:40vh;overflow:auto;margin:8px 0"></div><input type="text" id="oQ" placeholder="Type a message..."><button id="oGo">Send</button>');
+  $('mx').onclick=closeM;$('oGo').onclick=()=>oSend($('oQ').value);$('oQ').onkeydown=e=>{if(e.key==='Enter')oSend($('oQ').value)};
+  $('oCheck').onclick=()=>oSend('check my plist');$('oCopy').onclick=copyClaude;
+  if(!olog.length)olog.push({who:'bot',first:true,text:'Hi! I am the offline helper. I use premade answers, so I can be wrong. Type "what can you do", or start a command with '+(cfg.pfx||'~')+' (example: '+(cfg.pfx||'~')+'undo).'});
+  oRender();
+}
+/* pack builder */
+let pkSheets=[],pkActive=-1,pkMeta={},pkThumb=null,pkExtra=[];
+const pkFix=s=>{s.plist=s.plist.replace(/(<key>(?:realTextureFileName|textureFileName)<\/key>\s*<string>)[^<]*(<\/string>)/g,(m,a,b)=>a+esc(s.name)+b)};
+function pkSync(){try{if(pkActive>=0&&pkSheets[pkActive]&&sheet&&xdoc){const s=pkSheets[pkActive];s.canvas=sheet;s.plist=serialize();if(s.ren)pkFix(s)}}catch(e){}}
+function pkProblems(){
+  pkSync();const P=[],seen={};
+  pkSheets.forEach(s=>{
+    const n=s.name,nm=/<key>textureFileName<\/key>\s*<string>([^<]*)<\/string>/.exec(s.plist);
+    if(seen[n])P.push({t:'Two sheets are named '+n+'. The game keeps only one. Fix: rename one of them.'});seen[n]=1;
+    if(/\s/.test(n))P.push({t:n+': the name has a space. Fix: rename it without spaces.'});
+    if(!nm)P.push({t:n+': the plist has no textureFileName, so the game may not find the image. Fix: use the plist that belongs to this sheet.'});
+    else if(nm[1]!==n)P.push({t:n+': the plist says its image is "'+nm[1]+'", so the sheet may not load. Fix: tap Fix names, or rename the sheet to that name.',fix:1,s:s});
+    const sz=/<key>metadata<\/key>[\s\S]*?<key>size<\/key>\s*<string>\{(\d+),\s*(\d+)\}<\/string>/.exec(s.plist);
+    if(sz&&(+sz[1]!==s.canvas.width||+sz[2]!==s.canvas.height))P.push({t:n+': the plist says the image is '+sz[1]+'x'+sz[2]+' but it is '+s.canvas.width+'x'+s.canvas.height+'. The boxes may not match. Fix: use the right image, or scale the boxes.'});
+  });
+  return P;
+}
+function packBox(){
+  pkSync();
+  const rows=pkSheets.map((s,i)=>'<div class="pkRow"><input type="text" data-nm="'+i+'" value="'+esc(s.name)+'" style="flex:1;min-width:0"><button class="alt" data-ld="'+i+'">Load</button><button class="alt" data-rm="'+i+'">×</button></div>'+(i===pkActive?'<div style="font-size:11px;opacity:.5;margin:-4px 0 6px">in editor</div>':'')).join('');
+  const empty='<p style="font-size:13px;margin:4px 0">upload a asset/resources file from your device</p><p style="font-size:12px;color:var(--muted);margin:4px 0">dont have geometry dash? <a href="https://play.google.com/store/apps/details?id=com.robtopx.geometryjump" target="_blank" rel="noopener">Download the official Geometry Dash</a></p><button class="alt" id="pkTut">tutorial for search that file?</button>';
+  modal('<span class="x" id="mx">×</span><h3>Pack builder</h3>'+(pkSheets.length?rows:empty)+'<button class="alt" id="pkUpB">upload texture pack</button><input type="file" id="pkUp" accept=".zip,application/zip" hidden><label class="drop"><input type="file" id="pkI" accept="image/*"><b>Image (.png)</b><span id="pkIn">Tap to choose</span></label><label class="drop"><input type="file" id="pkL" accept=".plist,.xml,text/xml"><b>Plist (.plist)</b><span id="pkLn">Tap to choose</span></label><button id="pkAdd" disabled>Add to pack</button><button class="alt" id="pkPng">Pack PNGs into a sheet</button><button class="alt" id="pkChk"'+(pkSheets.length?'':' disabled')+'>Check pack</button><button id="pkMake"'+(pkSheets.length?'':' disabled')+'>Make the pack</button><div class="status" id="pkS2"></div>');
+  $('mx').onclick=closeM;
+  const say=(m,e)=>{$('pkS2').textContent=m;$('pkS2').className='status'+(e?' err':'')};
+  let fi=null,fl=null;const chk=()=>{$('pkAdd').disabled=!(fi&&fl)};
+  $('pkI').onchange=e=>{fi=e.target.files[0];$('pkIn').textContent=fi?fi.name:'Tap to choose';chk()};
+  $('pkL').onchange=e=>{fl=e.target.files[0];$('pkLn').textContent=fl?fl.name:'Tap to choose';chk()};
+  $('pkAdd').onclick=async()=>{
+    try{
+      const txt=await fl.text();if(txt.startsWith('bplist00'))throw new Error('only upload plist file in upload a plist button');if(txt.indexOf('<plist')<0)throw new Error('That is not a plist file');
+      const i=await imgFrom(fi),c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;c.getContext('2d').drawImage(i,0,0);
+      pkSheets.push({name:fi.name,canvas:c,plist:txt});packBox();
+    }catch(e){say(e.message||'Could not add that.',1)}
+  };
+  $('pkUpB').onclick=()=>$('pkUp').click();
+  $('pkUp').onchange=async e=>{
+    const f=e.target.files[0];if(!f)return;
+    try{
+      if(!window.JSZip)throw new Error('The zip tool did not load. Refresh the page.');
+      say('Reading the pack...');
+      const z=await JSZip.loadAsync(f),files=Object.values(z.files).filter(x=>!x.dir),base=x=>x.name.split('/').pop(),lc=x=>base(x).toLowerCase();
+      const pj=files.find(x=>lc(x)==='pack.json');if(pj){try{pkMeta=JSON.parse(await pj.async('string'))}catch(_){}}
+      const pi=files.find(x=>lc(x)==='pack.png');if(pi)pkThumb=await pi.async('blob');
+      const pls={};files.forEach(x=>{if(/\.plist$/i.test(x.name))pls[base(x).replace(/\.plist$/i,'')]=x});
+      const used=new Set(),ns=[];pkExtra=[];
+      for(const x of files){const b=base(x),k=b.replace(/\.png$/i,'');
+        if(/\.png$/i.test(b)&&lc(x)!=='pack.png'&&pls[k]){
+          const bm=await createImageBitmap(await x.async('blob')),c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
+          pkSheets.push({name:b,canvas:c,plist:await pls[k].async('string')});used.add(x.name);used.add(pls[k].name);ns.push(b)}}
+      for(const x of files)if(!used.has(x.name)&&lc(x)!=='pack.json'&&lc(x)!=='pack.png')pkExtra.push({path:x.name,blob:await x.async('blob')});
+      if(!ns.length)throw new Error('No sheets (a png with a plist) found in that zip.');
+      packBox();$('pkS2').textContent='Loaded '+ns.length+' sheet(s) and kept '+pkExtra.length+' other file(s).';
+    }catch(er){say(er.message||'Could not read that zip.',1)}
+  };
+  document.querySelectorAll('#mb [data-nm]').forEach(inp=>inp.onchange=()=>{
+    const s=pkSheets[+inp.dataset.nm];let v=inp.value.trim().replace(/\s+/g,'_');if(!v)v=s.name;if(!/\.png$/i.test(v))v+='.png';
+    s.name=v;s.ren=true;pkFix(s);packBox();
+  });
+  document.querySelectorAll('#mb [data-ld]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.ld,s=pkSheets[i];
+    try{sheet=s.canvas;sc=sheet.getContext('2d');load(s.plist);origSig=sigOf(sheet);ms.clear();fname=s.name.replace(/\.png$/i,'')+'-edited.plist';pkActive=i;
+      $('nImg').textContent=s.name+' (from pack)';$('nPl').textContent=fname;closeM();refresh()}
+    catch(e){say('Could not load that sheet.',1)}
+  });
+  document.querySelectorAll('#mb [data-rm]').forEach(b=>b.onclick=()=>{const i=+b.dataset.rm;pkSheets.splice(i,1);if(pkActive===i)pkActive=-1;else if(pkActive>i)pkActive--;packBox()});
+  if($('pkTut'))$('pkTut').onclick=pkTutorial;
+  $('pkPng').onclick=packPngs;
+  $('pkChk').onclick=()=>{
+    const P=pkProblems(),o=$('pkS2');
+    if(!P.length)return say('No problems found.');
+    o.className='status err';o.innerHTML=P.map(p=>'<div style="text-align:left;margin-bottom:6px">'+esc(p.t)+'</div>').join('')+(P.some(p=>p.fix)?'<button id="pkFx">Fix names</button>':'');
+    if($('pkFx'))$('pkFx').onclick=()=>{P.forEach(p=>{if(p.fix){p.s.ren=true;pkFix(p.s)}});$('pkChk').click()};
+  };
+  $('pkMake').onclick=pkMakeBox;
+}
+function pkTutorial(){
+  const T={
+    pc:'PC (Steam): in Steam, open Geometry Dash, then Manage > Browse local files > open the Resources folder. Pick the .png and .plist files from there.',
+    android:'Android: export the APK from the app, then open it as a zip file. Look in the assets folder for the .png and .plist files.',
+    iphone:'iPhone: use the .ipa from your own copy of the game and unzip it. The .png and .plist files are inside.',
+    tp:'Texture pack: its .plist and .png files work the same way. Pick them from the pack folder.'
+  };
+  modal('<span class="x" id="mx">×</span><h3>Tutorial</h3><div class="tools"><button class="alt" data-t="pc">pc</button><button class="alt" data-t="android">android</button><button class="alt" data-t="iphone">iphone</button><button class="alt" data-t="tp">texture pack</button></div><p id="pkT" style="font-size:14px;text-align:left">Pick one above.</p>');
+  $('mx').onclick=packBox;
+  document.querySelectorAll('#mb [data-t]').forEach(b=>b.onclick=()=>{$('pkT').textContent=T[b.dataset.t]});
+}
+function pkSquare(img,pos,size){const s=Math.min(img.naturalWidth,img.naturalHeight),c=document.createElement('canvas');c.width=c.height=size||Math.min(s,512);c.getContext('2d').drawImage(img,(img.naturalWidth-s)*pos/100,(img.naturalHeight-s)*pos/100,s,s,0,0,c.width,c.height);return c}
+function pkMakeBox(){
+  pkSync();const M=pkMeta||{};
+  modal('<span class="x" id="mx">×</span><h3>Make the pack</h3><label>Pack name</label><input type="text" id="mkN" value="'+esc(M.name||'')+'" placeholder="Pack name"><label>Author name</label><input type="text" id="mkA" value="'+esc(M.author||'')+'" placeholder="Author name"><label>Pack ID (optional)</label><input type="text" id="mkI" value="'+esc(M.id||'')+'" placeholder="author.some-id"><label>Version</label><input type="text" id="mkV" value="'+esc(M.version||'1.0.0')+'"><label class="drop"><input type="file" id="mkT" accept="image/*"><b>Pack thumbnail</b><span id="mkTn">'+(pkThumb?'Using the icon from the uploaded pack':'Tap to choose an image')+'</span></label><div id="mkP" style="display:none;text-align:left"><label>Crop position</label><input type="range" id="mkR" min="0" max="100" value="50"><canvas id="mkC" width="96" height="96" style="width:96px;height:96px;border-radius:8px"></canvas></div><button id="mkGo">make the pack</button><div class="status" id="mkS"></div>');
+  $('mx').onclick=packBox;let th=null,im=null;
+  const pv=()=>{const c=$('mkC').getContext('2d');c.clearRect(0,0,96,96);c.drawImage(pkSquare(im,+$('mkR').value,96),0,0)};
+  $('mkT').onchange=async e=>{th=e.target.files[0];$('mkTn').textContent=th?th.name:'Tap to choose an image';if(th){im=await imgFrom(th);$('mkP').style.display='block';pv()}};
+  $('mkR').oninput=()=>{if(im)pv()};
+  $('mkGo').onclick=async()=>{
+    const s=$('mkS'),err=m=>{s.textContent=m;s.className='status err'},slug=t=>t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const name=$('mkN').value.trim(),author=$('mkA').value.trim(),ver=$('mkV').value.trim(),id=$('mkI').value.trim()||(slug(author)+'.'+slug(name));
+    if(!name)return err('Type a pack name.');if(!author)return err('Type an author name.');if(!th&&!pkThumb)return err('Choose a pack thumbnail.');
+    if(!window.JSZip)return err('The zip tool did not load. Check your connection and refresh the page.');
+    try{
+      const z=new JSZip(),used={};
+      z.file('pack.json',JSON.stringify({textureldr:'1.5.0',name:name,id:id,version:ver,author:author},null,2));
+      z.file('pack.png',th?await new Promise(r=>pkSquare(im,+$('mkR').value).toBlob(r)):pkThumb);
+      pkExtra.forEach(x=>z.file(x.path,x.blob));
+      for(const sh of pkSheets){
+        let b=sh.name.replace(/\.png$/i,'')||'sheet';if(used[b]){used[b]++;b+='-'+used[b]}else used[b]=1;
+        z.file(b+'.png',await new Promise(r=>sh.canvas.toBlob(r)));z.file(b+'.plist',sh.plist);
+      }
+      const P=pkProblems(),blob=await z.generateAsync({type:'blob'});
+      save(blob,name.replace(/[^\w\- ]+/g,'_')+'.zip');
+      s.textContent='Pack made. Check your downloads.'+(P.length?' Warning: '+P.length+' problem(s) found. Open Pack > Check pack.':'');s.className='status';
+    }catch(e){err(e.message||'Could not make the pack.')}
+  };
+}
+function packPngs(){
+  modal('<span class="x" id="mx">×</span><h3>Pack builder</h3><p style="font-size:13px">Pick many PNGs. I pack them into one sheet and make the plist.</p><label class="drop"><input type="file" id="pkF" accept="image/*" multiple><b>Choose PNGs</b><span id="pkN">Tap to choose</span></label><div class="two"><div><label>Padding px</label><input type="number" id="pkP" value="2" min="0"></div><div><label>Max width px</label><input type="number" id="pkW" value="2048" min="64"></div></div><button id="pkGo" disabled>Build sheet and plist</button><div class="status" id="pkS"></div>');
+  $('mx').onclick=closeM;let files=[];
+  $('pkF').onchange=e=>{files=[...e.target.files];$('pkN').textContent=files.length+' file(s)';$('pkGo').disabled=!files.length};
+  $('pkGo').onclick=async()=>{
+    try{
+      const pad=Math.max(0,+$('pkP').value||0),MW=Math.max(64,+$('pkW').value||2048),items=[];
+      for(const f of files){const i=await imgFrom(f);items.push({name:f.name,i,w:i.naturalWidth,h:i.naturalHeight})}
+      for(const o of items)if(o.w+pad*2>MW)throw new Error(o.name+' is wider than the max width');
+      items.sort((a,b)=>b.h-a.h);
+      let x=pad,y=pad,rh=0,W=0;
+      for(const o of items){
+        if(x+o.w+pad>MW&&x>pad){x=pad;y+=rh+pad;rh=0}
+        o.x=x;o.y=y;x+=o.w+pad;rh=Math.max(rh,o.h);W=Math.max(W,x);
+      }
+      const H=y+rh+pad,c=document.createElement('canvas');c.width=W;c.height=H;
+      const g=c.getContext('2d');items.forEach(o=>g.drawImage(o.i,o.x,o.y));
+      const fr=items.map(o=>'<key>'+esc(o.name)+'</key><dict><key>spriteOffset</key><string>{0,0}</string><key>spriteSize</key><string>{'+o.w+','+o.h+'}</string><key>spriteSourceSize</key><string>{'+o.w+','+o.h+'}</string><key>textureRect</key><string>{{'+o.x+','+o.y+'},{'+o.w+','+o.h+'}}</string><key>textureRotated</key><false/></dict>').join('');
+      const txt='<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>frames</key><dict>'+fr+'</dict><key>metadata</key><dict><key>format</key><integer>3</integer><key>pixelFormat</key><string>RGBA8888</string><key>premultiplyAlpha</key><false/><key>realTextureFileName</key><string>pack.png</string><key>size</key><string>{'+W+','+H+'}</string><key>smartupdate</key><string></string><key>textureFileName</key><string>pack.png</string></dict></dict></plist>';
+      sheet=c;sc=g;load(txt);origSig=sigOf(sheet);ms.clear();fname='pack.plist';pkSheets.push({name:'pack.png',canvas:c,plist:txt});pkActive=pkSheets.length-1;
+      $('nImg').textContent='pack (built)';$('nPl').textContent='pack.plist (built)';
+      refresh();packBox();status(items.length+' sprites packed into a '+W+'x'+H+' sheet. Download the plist and the image.');
+    }catch(e){$('pkS').textContent=e.message||'Could not build the pack.';$('pkS').className='status err'}
+  };
+}
+$('bInfo').onclick=()=>{modal('<span class="x" id="mx">×</span><h3>Info</h3><p>This is for texture pack developers who do not want the plist to be wrong for the PNG.</p>');$('mx').onclick=closeM};
+$('bPack').onclick=packBox;
+/* compare original to edited */
+function sigOf(cv){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.drawImage(cv,0,0,128,128);const d=g.getImageData(0,0,128,128).data;let h=0;for(let i=0;i<d.length;i++)h=(h*31+d[i])|0;return{w:cv.width,h:cv.height,s:h}}
+function cmpRun(deep){
+  if(!origNames.length||!frames.length)return null;
+  const R={n:{moved:0,resized:0,offset:0,rot:0,ren:0,add:0,del:0},P:[],img:false},seen=new Set();
+  frames.forEach((f,i)=>{
+    const o=f.o;if(!o||seen.has(o.name)){R.n.add++;return}seen.add(o.name);
+    if(f.name!==o.name){R.n.ren++;R.P.push({i,k:1,t:'"'+o.name+'" was renamed to "'+f.name+'". The game looks for the old name, so the sprite may vanish. Fix: rename it back to "'+o.name+'".'})}
+    if(f.x!==o.x||f.y!==o.y)R.n.moved++;
+    if(f.w!==o.w||f.h!==o.h){R.n.resized++;const a=f.w/o.w,b=f.h/o.h;if(a>1.5||a<.67||b>1.5||b<.67)R.P.push({i,k:0,t:'"'+f.name+'" changed from '+o.w+'x'+o.h+' to '+f.w+'x'+f.h+'. That is a big change. Fix: if it was not on purpose, use Revert group.'})}
+    if(f.ox!==o.ox||f.oy!==o.oy)R.n.offset++;
+    if(f.rot!==o.rot){R.n.rot++;R.P.push({i,k:0,t:'"'+f.name+'" rotation changed ('+(o.rot?'rotated':'upright')+' to '+(f.rot?'rotated':'upright')+'). Fix: if it was not on purpose, tap Rotate again or use Revert group.'})}
+    if(sheet&&(f.x!==o.x||f.y!==o.y||f.w!==o.w||f.h!==o.h)){if(f.x<0||f.y<0||f.x+f.w>sheet.width||f.y+f.h>sheet.height)R.P.push({i,k:1,t:'"'+f.name+'" now goes outside the image. Fix: move it inside the image or resize it.'})}
+  });
+  const gone=origNames.filter(n=>!frames.some(f=>f.o&&f.o.name===n));R.n.del=gone.length;
+  if(gone.length)R.P.push({i:-1,k:1,t:gone.length+' group(s) from the original are missing: '+gone.slice(0,5).join(', ')+(gone.length>5?' and '+(gone.length-5)+' more':'')+'. The game may show nothing for them. Fix: undo the delete, or add groups with those names.'});
+  if(sheet&&origSig){
+    if(sheet.width!==origSig.w||sheet.height!==origSig.h)R.P.push({i:-1,k:1,t:'The image is now '+sheet.width+'x'+sheet.height+', it was '+origSig.w+'x'+origSig.h+'. The boxes will not match the pixels. Fix: use the original image size, or scale the boxes to match.'});
+    else if(deep)R.img=sigOf(sheet).s!==origSig.s;
+  }
+  return R;
+}
+function cmpDot(){try{const R=cmpRun(),b=$('bCmp');if(b)b.classList.toggle('dot',!!(R&&R.P.some(p=>p.k)))}catch(e){}}
+function cmpBox(){
+  const R=cmpRun(true);
+  if(!R||!sheet)return(modal('<span class="x" id="mx">×</span><h3>Compare original to edited</h3><p style="font-size:14px">Upload an image and a plist first. The first version you upload is the original.</p>'),$('mx').onclick=closeM);
+  const n=R.n,L=[['moved',n.moved],['resized',n.resized],['offset changed',n.offset],['rotation changed',n.rot],['renamed',n.ren],['added',n.add],['deleted',n.del]].filter(x=>x[1]).map(x=>x[1]+' '+x[0]);
+  modal('<span class="x" id="mx">×</span><h3>Compare original to edited</h3><p style="font-size:14px;text-align:left">'+(L.length||R.img?esc((L.length?L.join(', ')+'.':'')+(R.img?' The image pixels were edited.':'')):'No changes from the original.')+'</p>'+
+    (R.P.length?R.P.map((p,j)=>'<div style="text-align:left;margin:8px 0;font-size:14px"><b>'+(p.k?'Fatal: ':'Big change: ')+'</b>'+esc(p.t)+(p.i>=0?' <button class="alt" data-sl="'+p.i+'" style="width:auto;padding:4px 10px">Select</button>':'')+'</div>').join(''):'<p style="font-size:13px;opacity:.6">No fatal flaws or big changes found. Pre-test check looks for other errors.</p>'));
+  $('mx').onclick=closeM;
+  document.querySelectorAll('#mb [data-sl]').forEach(b=>b.onclick=()=>{closeM();select(+b.dataset.sl)});
+}
+$('bCmp').onclick=cmpBox;
+$('bDlg').onclick=()=>{
+  const f=frames[sel];if(!f||!sheet)return;
+  const sw=f.w,sh=f.h,c=document.createElement('canvas'),g=c.getContext('2d');
+  c.width=f.rot?f.h:f.w;c.height=f.rot?f.w:f.h;
+  if(f.rot)g.setTransform(0,-1,1,0,0,sw);
+  g.drawImage(sheet,f.x,f.y,sw,sh,0,0,sw,sh);
+  c.toBlob(b=>save(b,/\.png$/i.test(f.name)?f.name:f.name+'.png'));
+};
+
+/* game preview */
+let gz=1,gcells=[];
+const gv=$('gv'),gx=gv.getContext('2d'),gview=$('gview');
+function srcSize(f){const m=pairs(f.el),k=m.spriteSourceSize||m.sourceSize,n=k?nums(k.textContent):null;return n&&n.length>1?[n[0],n[1]]:[f.rot?f.h:f.w,f.rot?f.w:f.h]}
+function drawGame(){
+  const W=Math.max(120,gview.clientWidth-4);
+  gcells=[];
+  if(!sheet||!frames.length){gv.width=W;gv.height=60;gx.clearRect(0,0,W,60);gx.fillStyle='#888';gx.font='13px sans-serif';gx.fillText('Load a sheet to see the game preview',10,34);return}
+  const SS=frames.map(srcSize),avg=SS.reduce((a,s)=>a+s[0],0)/SS.length,k=Math.min(1,110/avg)*gz;
+  let x=8,y=8,rowH=0;
+  const cl=frames.map((f,i)=>{
+    const w=Math.max(SS[i][0]*k,12),h=Math.max(SS[i][1]*k,12);
+    if(x+w+8>W&&x>8){x=8;y+=rowH+22;rowH=0}
+    const p={x,y,w,h};x+=w+10;rowH=Math.max(rowH,h);return p;
+  });
+  gv.width=W;gv.height=Math.max(y+rowH+26,60);
+  gx.clearRect(0,0,W,gv.height);gx.imageSmoothingEnabled=k<1;
+  frames.forEach((f,i)=>{
+    const p=cl[i],sw=SS[i][0],sh=SS[i][1],rw=f.rot?f.h:f.w,rh=f.rot?f.w:f.h;
+    const x0=p.x+(sw/2+f.ox-rw/2)*k,y0=p.y+(sh/2-f.oy-rh/2)*k;
+    gx.save();
+    if(f.rot){gx.translate(x0,y0+rh*k);gx.rotate(-Math.PI/2);gx.drawImage(sheet,f.x,f.y,f.w,f.h,0,0,f.w*k,f.h*k)}
+    else gx.drawImage(sheet,f.x,f.y,f.w,f.h,x0,y0,f.w*k,f.h*k);
+    gx.restore();
+    const on=i===sel||(multi&&ms.has(i));
+    gx.strokeStyle=on?cfg.red:cfg.red+'59';gx.lineWidth=on?2.5:1;gx.strokeRect(p.x,p.y,p.w,p.h);
+    gx.fillStyle='#9a9aa3';gx.font='10px sans-serif';gx.fillText(f.name.replace(/\.png$/,'').slice(0,Math.max(6,Math.floor(p.w/6))),p.x,p.y+p.h+12);
+    gcells.push({i,x:p.x,y:p.y,w:p.w,h:p.h});
+  });
+  gv.style.width=gv.width+'px';gv.style.height=gv.height+'px';
+}
+gv.addEventListener('click',e=>{
+  const r=gv.getBoundingClientRect(),x=(e.clientX-r.left)*gv.width/r.width,y=(e.clientY-r.top)*gv.height/r.height;
+  const c=gcells.find(c=>x>=c.x&&x<=c.x+c.w&&y>=c.y&&y<=c.y+c.h);if(c)select(c.i);
+});
+$('gIn').onclick=()=>{gz=Math.min(4,gz*1.25);drawGame()};
+$('gOut').onclick=()=>{gz=Math.max(.25,gz/1.25);drawGame()};
+window.addEventListener('resize',drawGame);
+const draw0=draw;draw=function(){draw0();drawGame();$('bPre').disabled=!frames.length};
+
+/* pre-test check */
+function preTest(){
+  const er=[],wr=[],nm2={};
+  frames.forEach((f,i)=>{
+    const sz=srcSize(f),rw=f.rot?f.h:f.w,rh=f.rot?f.w:f.h;
+    if(f.w<=0||f.h<=0)er.push([i,f.name+' has size 0']);
+    if(sheet&&(f.x<0||f.y<0||f.x+f.w>sheet.width||f.y+f.h>sheet.height))er.push([i,f.name+' goes outside the image']);
+    (nm2[f.name]=nm2[f.name]||[]).push(i);
+    if(f.rot)wr.push([i,f.name+' is rotated']);
+    if([f.x,f.y,f.w,f.h].some(v=>v%1))wr.push([i,f.name+' has decimal numbers']);
+    if(Math.abs(f.ox)>(sz[0]-rw)/2+.5||Math.abs(f.oy)>(sz[1]-rh)/2+.5)wr.push([i,f.name+' sticks out of its original size']);
+    if(!/\.png$/i.test(f.name))wr.push([i,f.name+' has no .png ending']);
+    if(f.ssd)wr.push([i,f.name+': spriteSize is '+f.ss0[0]+'x'+f.ss0[1]+' but textureRect is '+f.sm[0]+'x'+f.sm[1]+'. The game uses spriteSize. Download writes both the same.']);
+  });
+  for(const n in nm2)if(nm2[n].length>1)er.push([nm2[n][1],n+' is used '+nm2[n].length+' times']);
+  for(let a=0;a<frames.length&&er.length<30;a++)for(let b=a+1;b<frames.length;b++){const p=frames[a],q=frames[b];if(p.x<q.x+q.w&&q.x<p.x+p.w&&p.y<q.y+q.h&&q.y<p.y+p.h)er.push([a,p.name+' overlaps '+q.name])}
+  const root=xdoc&&xdoc.querySelector('plist > dict'),rp=root&&pairs(root),md=rp&&rp.metadata&&pairs(rp.metadata),sz2=md&&md.size?nums(md.size.textContent):null;
+  if(sz2&&sz2.length>1&&sheet&&(sz2[0]!==sheet.width||sz2[1]!==sheet.height))er.unshift([-1,'The plist says the sheet is '+sz2[0]+'x'+sz2[1]+' but the image is '+sheet.width+'x'+sheet.height]);
+  const pick=[...er,...wr].filter(x=>x[0]>=0).slice(0,8);
+  modal('<span class="x" id="mx">×</span><h3>Pre-test check</h3>'+
+    (er.length?'<p><b>Fix these first ('+er.length+'):</b></p>'+er.slice(0,8).map(x=>'<p>• '+esc(x[1])+'</p>').join(''):'<p><b>No errors found. Ready to test.</b></p>')+
+    (wr.length?'<p><b>Test these first ('+wr.length+'):</b></p>'+wr.slice(0,8).map(x=>'<p>• '+esc(x[1])+'</p>').join(''):'')+
+    pick.map(x=>'<button class="alt" data-p="'+x[0]+'">Select '+esc(frames[x[0]].name)+'</button>').join('')+
+    '<p style="font-size:12px;opacity:.6">This checks the standard plist rules. The game may differ a little.</p>');
+  $('mx').onclick=closeM;
+  document.querySelectorAll('#mb [data-p]').forEach(b=>b.onclick=()=>{closeM();select(+b.dataset.p)});
+}
+$('bPre').onclick=preTest;
+/* batch 2 */
+const draw1=draw;draw=function(){draw1();$('bRev').disabled=!tgts().some(i=>frames[i]&&frames[i].o)};
+$('bRev').onclick=()=>{
+  const t=tgts().filter(i=>frames[i].o);if(!t.length)return;const b=snap();let op=null;
+  for(const i of t){
+    const f=frames[i],o=f.o,rotOk=f.rot!==o.rot&&t.length===1&&f.x+f.h<=sheet.width&&f.y+f.w<=sheet.height;
+    if(rotOk){op={x:f.x,y:f.y,w:f.w,h:f.h,to:o.rot};rotPx(f,o.rot)}
+    Object.assign(f,{x:o.x,y:o.y,ox:o.ox,oy:o.oy,name:o.name});
+    if(f.rot===o.rot||rotOk)Object.assign(f,{w:o.w,h:o.h,rot:o.rot});
+  }
+  push(b,op);list();panel();draw();
+};
+function applyCfg(){
+  if(cfg.dark!==null)document.documentElement.setAttribute('data-theme',cfg.dark?'dark':'light');
+  document.querySelectorAll('.view').forEach(v=>v.style.background=cfg.bg);
+  $('lbl').checked=cfg.names;
+}
+function saveCfg(){try{localStorage.setItem('gdcfg',JSON.stringify(cfg))}catch(e){}}
+applyCfg();
+function ask2(t,y,n,fn){modal('<h3>'+esc(t)+'</h3><button id="cY">'+esc(y)+'</button><button class="alt" id="cN">'+esc(n)+'</button>');$('cY').onclick=fn;$('cN').onclick=setBox}
+async function clearData(){
+  for(const[nm,st]of[['gdplist','s'],['gdplist-manual','m']]){try{
+    const db=await new Promise((ok,no)=>{const r=indexedDB.open(nm,1);r.onupgradeneeded=()=>r.result.createObjectStore(st,{keyPath:'t'});r.onsuccess=()=>ok(r.result);r.onerror=no});
+    await new Promise(r=>{const tx=db.transaction(st,'readwrite');tx.objectStore(st).clear();tx.oncomplete=r;tx.onerror=r});db.close();
+  }catch(e){}}
+  setBox();
+}
+function setBox(){
+  const row=(l,c)=>'<div class="kr"><span>'+l+'</span>'+c+'</div>';
+  const dk=cfg.dark===null?matchMedia('(prefers-color-scheme: dark)').matches:cfg.dark;
+  modal('<span class="x" id="mx">×</span><h3>Settings</h3>'+
+    row('Autosave','<button class="alt" id="sA">'+(cfg.auto?cfg.auto+' min':'Off')+'</button>')+
+    row('Dark theme','<input type="checkbox" class="sw" id="sT"'+(dk?' checked':'')+'>')+
+    row('Border color','<input type="color" id="sR" value="'+cfg.red+'">')+
+    row('Box background','<input type="color" id="sB" value="'+cfg.bg+'">')+
+    row('Handle size','<input type="range" id="sH" min="5" max="20" value="'+cfg.hs+'">')+
+    row('Pixel snapping','<input type="checkbox" class="sw" id="sS"'+(cfg.snap?' checked':'')+'>')+
+    row('Group snap','<input type="checkbox" class="sw" id="sG"'+(cfg.gs!==false?' checked':'')+'>')+
+    row('Group snap distance (px)','<input type="number" id="sGd" min="2" max="30" style="width:70px" value="'+(cfg.gd||8)+'">')+
+    row('Snap gap (px)','<input type="number" id="sGg" min="0" max="10" style="width:70px" value="'+(cfg.gg||0)+'">')+
+    row('Show group names','<input type="checkbox" class="sw" id="sN"'+(cfg.names?' checked':'')+'>')+
+    row('Animation speed','<input type="range" id="sF" min="1" max="30" value="'+cfg.fps+'">')+
+    row('Command prefix','<input type="text" id="sP" style="width:70px;text-align:center" value="'+esc(cfg.pfx||'~')+'">')+
+    '<div id="sPm" style="font-size:12px;opacity:.5;min-height:16px;margin:-4px 0 6px"></div>'+
+    '<button class="alt" id="sK">Reset keybinds</button><button class="alt" id="sC">Clear saved data</button><p style="font-size:12px;opacity:.6">Version 4.0</p>');
+  $('mx').onclick=closeM;
+  $('sA').onclick=()=>{const o=[10,20,30,0];cfg.auto=o[(o.indexOf(cfg.auto)+1)%4];saveCfg();setAuto();setBox()};
+  $('sT').onchange=()=>{cfg.dark=$('sT').checked;saveCfg();applyCfg()};
+  $('sR').oninput=()=>{cfg.red=$('sR').value;saveCfg();draw()};
+  $('sB').oninput=()=>{cfg.bg=$('sB').value;saveCfg();applyCfg()};
+  $('sH').oninput=()=>{cfg.hs=+$('sH').value;saveCfg();draw()};
+  $('sS').onchange=()=>{cfg.snap=$('sS').checked;saveCfg()};
+  $('sN').onchange=()=>{cfg.names=$('sN').checked;saveCfg();applyCfg();draw()};
+  $('sF').oninput=()=>{cfg.fps=+$('sF').value;saveCfg()};
+  $('sP').oninput=()=>{const v=$('sP').value;if([...v].length===1&&/^[^\p{L}\p{N}\s]$/u.test(v)){cfg.pfx=v;saveCfg();$('sPm').textContent=''}else $('sPm').textContent='only accept 1 single symbol'};
+  $('sP').onblur=()=>{$('sP').value=cfg.pfx||'~';$('sPm').textContent=''};
+  $('sG').onchange=()=>{cfg.gs=$('sG').checked;saveCfg()};
+  $('sGd').oninput=()=>{cfg.gd=Math.min(30,Math.max(2,+$('sGd').value||8));saveCfg()};
+  $('sGg').oninput=()=>{cfg.gg=Math.min(10,Math.max(0,+$('sGg').value||0));saveCfg()};
+  $('sK').onclick=()=>ask2('Are you sure?','Yes','No',()=>{keys={};try{localStorage.setItem('gdkeys','{}')}catch(e){}updTap();setBox()});
+  $('sC').onclick=()=>ask2('Are you sure to delete all your data?','Yes','No',()=>ask2('Are you really sure?',"I'm really sure",'Not really sure',clearData));
+}
+$('bSet').onclick=setBox;
+const idb2=()=>new Promise((ok,no)=>{const r=indexedDB.open('gdplist-manual',1);r.onupgradeneeded=()=>r.result.createObjectStore('m',{keyPath:'t'});r.onsuccess=()=>ok(r.result);r.onerror=no});
+async function manualBox(){
+  let rows=[];
+  try{const db=await idb2();rows=await new Promise(r=>{const q=db.transaction('m').objectStore('m').getAll();q.onsuccess=()=>r(q.result)})}catch(e){}
+  rows.sort((a,b)=>b.t-a.t);
+  modal('<span class="x" id="mx">×</span><h3>Manual saves</h3><input type="text" id="msN" placeholder="Name (optional)"><button id="msGo"'+(sheet&&xdoc?'':' disabled')+'>Save now</button>'+(rows.length?rows.map(r=>{const d=new Date(r.t);return'<div class="kr"><span>'+esc(r.name||'Manual save')+' | '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' | '+d.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' |</span><button class="alt" data-l="'+r.t+'">+</button><button class="alt" data-md="'+r.t+'">♻</button></div>'}).join(''):'<p>No manual saves yet.</p>'));
+  $('mx').onclick=closeM;
+  $('msGo').onclick=async()=>{try{const blob=await new Promise(r=>sheet.toBlob(r)),db=await idb2(),tx=db.transaction('m','readwrite');tx.objectStore('m').put({t:Date.now(),name:$('msN').value.trim(),img:blob,plist:serialize(),fname});tx.oncomplete=manualBox}catch(e){}};
+  document.querySelectorAll('#mb [data-l]').forEach(b=>b.onclick=async()=>{const r=rows.find(x=>x.t==b.dataset.l);try{setSheet(await imgFrom(r.img));load(r.plist);fname=r.fname;closeM();refresh()}catch(e){status('Could not load that save',true);closeM()}});
+  document.querySelectorAll('#mb [data-md]').forEach(b=>b.onclick=async()=>{try{const db=await idb2(),tx=db.transaction('m','readwrite');tx.objectStore('m').delete(+b.dataset.md);tx.oncomplete=manualBox}catch(e){}});
+}
+$('bSave').onclick=manualBox;
+function paint(g,f,px,py,k){const sz=srcSize(f),rw=f.rot?f.h:f.w,rh=f.rot?f.w:f.h,x0=px+(sz[0]/2+f.ox-rw/2)*k,y0=py+(sz[1]/2-f.oy-rh/2)*k;g.save();if(f.rot){g.translate(x0,y0+rh*k);g.rotate(-Math.PI/2);g.drawImage(sheet,f.x,f.y,f.w,f.h,0,0,f.w*k,f.h*k)}else g.drawImage(sheet,f.x,f.y,f.w,f.h,x0,y0,f.w*k,f.h*k);g.restore()}
+function animSets(){
+  const m={};frames.forEach((f,i)=>{const r=f.name.match(/^(.*?)[_\-]?(\d+)(\.png)?$/i);if(r)(m[r[1]]=m[r[1]]||[]).push([+r[2],i])});
+  const o={};for(const k in m)if(m[k].length>1)o[k]=m[k].sort((a,b)=>a[0]-b[0]).map(x=>x[1]);return o;
+}
+function animBox(){
+  const sets=animSets();if(multi&&ms.size>1)sets['Selected groups']=[...ms].sort((a,b)=>a-b);
+  const ks=Object.keys(sets);
+  modal('<span class="x" id="mx">×</span><h3>Animation preview</h3>'+(ks.length?'<select id="anS">'+ks.map(k=>'<option>'+esc(k)+'</option>').join('')+'</select><canvas id="anC" width="240" height="240" style="background:#000;margin:8px auto;max-width:100%"></canvas><div class="row"><span>Speed</span><input type="range" id="anF" min="1" max="30" value="'+cfg.fps+'"><span id="anV"></span></div><button id="anP">Pause</button>':'<p>No animation found. Name groups with numbers, like name_001 and name_002, or select groups in multi mode.</p>'));
+  $('mx').onclick=closeM;if(!ks.length)return;
+  let idx=0,run=true,t=null;const g=$('anC').getContext('2d');
+  function fr(){
+    if(!$('anC')){clearInterval(t);return}
+    const set=sets[$('anS').value],ss=set.map(i=>srcSize(frames[i])),k=Math.min(220/Math.max(...ss.map(s=>s[0])),220/Math.max(...ss.map(s=>s[1])),2);
+    g.clearRect(0,0,240,240);const f=frames[set[idx%set.length]],sz=srcSize(f);paint(g,f,120-sz[0]*k/2,120-sz[1]*k/2,k);idx++;
+  }
+  function restart(){clearInterval(t);if(run)t=setInterval(fr,1000/cfg.fps)}
+  $('anF').oninput=()=>{cfg.fps=+$('anF').value;$('anV').textContent=cfg.fps+' fps';saveCfg();restart()};
+  $('anP').onclick=()=>{run=!run;$('anP').textContent=run?'Pause':'Play';restart()};
+  $('anS').onchange=()=>{idx=0};
+  $('anV').textContent=cfg.fps+' fps';restart();fr();
+}
+$('gAn').onclick=animBox;
+$('bOff').onclick=offBox;
+setTimeout(()=>{if(!window.claude)$('bAI').style.display='none'},1500);
+iconify(document.body);
+
+document.querySelectorAll('.infoBtn').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();modal('<span class="x" id="mx">×</span><h3>Info</h3><p>This is for texture pack developers who do not want the plist to be wrong for the PNG.</p>');$('mx').onclick=closeM});
+
+/* keybinds */
+function stepGroup(d){
+  const q=$('q').value.toLowerCase(),vis=[];frames.forEach((f,i)=>{if(f.name.toLowerCase().includes(q))vis.push(i)});
+  if(!vis.length)return;
+  const p=vis.indexOf(sel);let n;
+  if(p<0)n=d<0?vis.length-1:0;else n=(p+d+vis.length)%vis.length;
+  select(vis[n]);
+  const o=$('sel').querySelector('option:checked');if(o&&o.scrollIntoView)o.scrollIntoView({block:'nearest'});
+}
+$('bNext').onclick=()=>stepGroup(-1);$('bPrev').onclick=()=>stepGroup(1);
+const ACTS=[['rot','Rotate 90°',rotate],['undo','Undo <[',undo],['redo','Redo ]>',redoIt],['add','Add group +',add],['copy','Copy group 🔄',copy],['del','Delete group ♻️',del],['s1','+1 pixel',()=>setStep(1)],['s5','+5 pixel',()=>setStep(5)],['s10','+10 pixel',()=>setStep(10)],['sc','+ custom pixel',()=>setStep(parseFloat($('cs').value))],['up','Move up ⬆️',DIR.up],['left','Move left ⬅️',DIR.left],['right','Move right ➡️',DIR.right],['down','Move down ⬇️',DIR.down],['zin','Zoom in +',()=>setZoom(+$('zoom').value*1.25)],['zout','Zoom out −',()=>setZoom(+$('zoom').value/1.25)],['multi','Multi select mode 🖲',()=>setMulti(!multi)],['eye','Hide or show group 👁',()=>$('bEye').click()],['rev','Revert group',()=>$('bRev').click()],['pre','Pre-test check',()=>$('bPre').click()],['anim','Animation preview',()=>$('gAn').click()],['gzin','Game preview zoom in',()=>$('gIn').click()],['gzout','Game preview zoom out',()=>$('gOut').click()],['msave','Manual saves',()=>$('bSave').click()],['sett','Settings',()=>$('bSet').click()],['helper','Offline helper',()=>$('bOff').click()],['next','Next group (up)',()=>stepGroup(-1)],['prev','Previous group (down)',()=>stepGroup(1)]];
+let keys={};try{keys=JSON.parse(localStorage.getItem('gdkeys')||'{}')}catch(e){}
+const modal=h=>{$('mb').innerHTML=h;$('modal').style.display='flex';iconify($('mb'))};
+const closeM=()=>{$('modal').style.display='none';bind=null};
+const nm=a=>ACTS.find(x=>x[0]===a)[1];
+const kn=k=>k===' '?'Space':/^tap:/.test(k)?k.slice(4)+'× tap':k;
+function dups(){const g={};for(const a in keys)(g[keys[a]]=g[keys[a]]||[]).push(a);return Object.values(g).filter(v=>v.length>1).flat()}
+function keysBox(){
+  bind=null;updTap();
+  modal('<span class="x" id="mx">×</span><h3>⌨️ Keybinds</h3>'+ACTS.map(a=>'<div class="kr"><span>'+a[1]+'</span><button class="alt" data-a="'+a[0]+'">'+(keys[a[0]]?kn(keys[a[0]])+' +':'+ key')+'</button></div>').join(''));
+  $('mx').onclick=closeM;
+  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>ask(b.dataset.a,false));
+}
+function ask(a,warn){
+  bind={a,warn};
+  const used=Object.values(keys),free=[...'abcdefghijklmnopqrstuvwxyz0123456789'].find(c=>!used.includes(c));
+  modal((warn?'':'<span class="x" id="mx">×</span>')+'<h3>press a key</h3>'+(warn?'<p>change to <b>'+free+'</b></p>':'')+'<button class="alt" id="mk">Mobile keybinds</button>');
+  if(!warn)$('mx').onclick=keysBox;
+  $('mk').onclick=()=>askTap(a,warn);
+}
+function askTap(a,warn){
+  bind={a,warn,tap:1};
+  const used=Object.values(keys);let free=1;while(used.includes('tap:'+free))free++;
+  modal((warn?'':'<span class="x" id="mx">×</span>')+'<h3>&lt;insert number&gt; click</h3>'+(warn?'<p>change to <b>'+free+'</b></p>':'')+'<input type="number" id="tn" min="1" max="28" value="2" style="width:90px;text-align:center"><button id="tok">Set</button><p id="tm" style="color:var(--accent);margin:8px 0 0"></p>');
+  if(!warn)$('mx').onclick=()=>ask(a,false);
+  $('tok').onclick=()=>{const n=Math.round(+$('tn').value);if(!(n>=1&&n<=28)){$('tm').textContent='Enter a number from 1 to 28.';return}setTapKey(a,n)};
+}
+function setTapKey(a,n){
+  keys[a]='tap:'+n;
+  try{localStorage.setItem('gdkeys',JSON.stringify(keys))}catch(x){}
+  const d=dups();d.length?warnBox(d):keysBox();
+}
+let tapN=0,tapT=null;
+function updTap(){const on=Object.values(keys).some(v=>/^tap:/.test(v))?'block':'none';$('tapBtn').style.display=on;$('tapEnter').style.display=on}
+function tapLbl(){$('tapBtn').innerHTML='👆 tap'+(tapN?' ('+tapN+')':'');iconify($('tapBtn'))}
+$('tapBtn').onclick=()=>{tapN++;clearTimeout(tapT);tapT=setTimeout(()=>{tapN=0;tapLbl()},8000);tapLbl()};
+$('tapEnter').onclick=()=>{clearTimeout(tapT);const n=tapN;tapN=0;tapLbl();const bad=dups(),a=ACTS.find(x=>keys[x[0]]==='tap:'+n&&!bad.includes(x[0]));if(a)a[2]()};
+updTap();
+function warnBox(d){
+  bind=null;updTap();
+  modal('<h3>Warning</h3><p>There was a duplicate keybind, you need to change one.</p>'+d.map(a=>'<button class="alt" data-w="'+a+'">'+nm(a)+'</button>').join(''));
+  document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>ask(b.dataset.w,true));
+}
+$('bKeys').onclick=keysBox;
+$('modal').onclick=e=>{if(e.target.id==='modal'&&!bind&&!$('mb').querySelector('[data-w]'))closeM()};
+document.addEventListener('keydown',e=>{
+  if(bind&&bind.tap)return;
+  if(bind){
+    e.preventDefault();if(['Shift','Control','Alt','Meta'].includes(e.key))return;
+    keys[bind.a]=e.key.length===1?e.key.toLowerCase():e.key;
+    try{localStorage.setItem('gdkeys',JSON.stringify(keys))}catch(x){}
+    const d=dups();d.length?warnBox(d):keysBox();return;
+  }
+  if($('modal').style.display==='flex'||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key,bad=dups();
+  const a=ACTS.find(x=>keys[x[0]]===k&&!bad.includes(x[0]));
+  if(a){e.preventDefault();a[2]()}
+});
+
+/* autosave */
+const idb=()=>new Promise((ok,no)=>{const r=indexedDB.open('gdplist',1);r.onupgradeneeded=()=>r.result.createObjectStore('s',{keyPath:'t'});r.onsuccess=()=>ok(r.result);r.onerror=no});
+async function autosave(){
+  if(!sheet||!xdoc)return;
+  try{
+    const blob=await new Promise(r=>sheet.toBlob(r)),plist=serialize(),db=await idb(),st=db.transaction('s','readwrite').objectStore('s');
+    st.put({t:Date.now(),img:blob,plist,fname});
+    const k=st.getAllKeys();k.onsuccess=()=>k.result.sort((a,b)=>b-a).slice(10).forEach(x=>st.delete(x));
+  }catch(e){}
+}
+let autoT=null;function setAuto(){clearInterval(autoT);if(cfg.auto)autoT=setInterval(autosave,cfg.auto*60000)}
+setAuto();
+$('bAuto').onclick=async()=>{
+  let rows=[];
+  try{const db=await idb();rows=await new Promise(r=>{const q=db.transaction('s').objectStore('s').getAll();q.onsuccess=()=>r(q.result)})}catch(e){}
+  rows.sort((a,b)=>b.t-a.t);
+  modal('<span class="x" id="mx">×</span><h3>Auto saved</h3>'+(rows.length?rows.map(r=>{const d=new Date(r.t);return'<div class="kr"><span>Auto saved work | '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' | '+d.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' |</span><button class="alt" data-t="'+r.t+'">+</button></div>'}).join(''):'<p>Nothing saved yet. Work is saved every 20 minutes.</p>'));
+  $('mx').onclick=closeM;
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=async()=>{
+    const r=rows.find(x=>x.t==b.dataset.t);
+    try{setSheet(await imgFrom(r.img));load(r.plist);fname=r.fname;closeM();refresh()}catch(e){status('Could not load that save',true);closeM()}
+  });
+};
+
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
