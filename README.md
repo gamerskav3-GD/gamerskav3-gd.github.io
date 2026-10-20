@@ -1,7 +1,7 @@
 hey you probably not reading the readme but okay this is the actual description:
 # GD Plist Editor
 
-A visual Geometry Dash PLIST editor created with Claude.
+A visual Geometry Dash PLIST editor created with Claude (Sorry bro 😭 i can't coding) 
 
 Edit Geometry Dash spritesheets directly through an interactive HTML interface. Load your PNG and PLIST files, modify sprite data visually, preview your changes, and export the results.
 
