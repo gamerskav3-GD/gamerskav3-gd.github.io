@@ -18,6 +18,14 @@ Edit Geometry Dash spritesheets directly through an interactive HTML interface. 
 - Undo and Redo, Autosave, and custom keybinds.
 - Export: download the edited PLIST and image, or a single sprite as a PNG.
 
+## What This Repo Is For
+
+This project is made for Geometry Dash texture pack developers.
+
+It helps you open a PNG spritesheet and its matching XML PLIST file, then edit sprite frames visually instead of hand-editing raw plist data. You can move, resize, rename, rotate, and fix sprite entries, preview how they look, and export the corrected files for use in your texture pack.
+
+This tool is designed for custom resource and texture pack work, especially when you need to fix or rebuild Geometry Dash sprite data without manually editing XML by hand.
+
 ## How to Use
 
 1. Download the Android app (.apk) from the Releases page, or open the offline website: https://gamerskav3-gd.github.io/
