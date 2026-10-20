@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.gamerskav3.gdplist",
+    "sha256_cert_fingerprints": ["D1:2E:23:47:1D:F7:F0:8A:EF:1E:A9:F4:BC:15:90:A1:BA:03:34:5D:56:6F:38:98:17:E2:BF:75:4D:D3:D1:CC"]
+  }
+}]
