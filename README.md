@@ -38,5 +38,6 @@ Edit Geometry Dash spritesheets directly through an interactive HTML interface. 
 - Only XML PLIST files work. Binary plist (bplist) files are not supported.
 - The editor works offline after the first open. The 🤖 Claude helper only works inside Claude.
 - The editor preview may differ slightly from the actual game. Test your files in the game.
-- active releases only on the notification on my repository and when there's a update you get notification
+- active "releases only" on the notification on my repository and when there's a update you get notification
+
 Edit visually. Preview carefully. Export confidently.lol
