@@ -57,63 +57,10 @@ canvas{display:block;margin:auto;flex:none;image-rendering:pixelated}
 .pkRow{display:flex;gap:6px;align-items:center;margin-bottom:6px;font-size:14px}.pkRow span{flex:1;text-align:left;word-break:break-all}.pkRow button{width:auto;padding:6px 10px}
 #bCmp.dot::after{content:"";position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#e5484d}
 </style>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1b1b1f">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<script>
-/* mini zip: makes and reads .zip files without any internet */
-(function(){
-  const T=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;T[i]=c>>>0}
-  const crc=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=T[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
-  const enc=new TextEncoder(),dec=new TextDecoder();
-  const toU8=async d=>d instanceof Uint8Array?d:typeof d==='string'?enc.encode(d):new Uint8Array(await d.arrayBuffer());
-  async function inflate(u8){const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(ds.readable).arrayBuffer())}
-  function MiniZip(){this._f=[]}
-  MiniZip.prototype.file=function(name,data){this._f.push({name:String(name).replace(/^\/+/,''),data});return this};
-  MiniZip.prototype.generateAsync=async function(){
-    const d=new Date(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
-    const parts=[],cen=[];let off=0;
-    for(const f of this._f){
-      const n=enc.encode(f.name),u=await toU8(f.data),c=crc(u);
-      const lh=new DataView(new ArrayBuffer(30));
-      lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);lh.setUint16(10,tm,true);lh.setUint16(12,dt,true);
-      lh.setUint32(14,c,true);lh.setUint32(18,u.length,true);lh.setUint32(22,u.length,true);lh.setUint16(26,n.length,true);lh.setUint16(28,0,true);
-      parts.push(new Uint8Array(lh.buffer),n,u);
-      const ch=new DataView(new ArrayBuffer(46));
-      ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(10,0,true);ch.setUint16(12,tm,true);ch.setUint16(14,dt,true);
-      ch.setUint32(16,c,true);ch.setUint32(20,u.length,true);ch.setUint32(24,u.length,true);ch.setUint16(28,n.length,true);ch.setUint32(42,off,true);
-      cen.push(new Uint8Array(ch.buffer),n);
-      off+=30+n.length+u.length;
-    }
-    let cs=0;cen.forEach(p=>cs+=p.length);
-    const e=new DataView(new ArrayBuffer(22));
-    e.setUint32(0,0x06054b50,true);e.setUint16(8,this._f.length,true);e.setUint16(10,this._f.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
-    return new Blob([...parts,...cen,new Uint8Array(e.buffer)],{type:'application/zip'});
-  };
-  MiniZip.loadAsync=async function(file){
-    const u=new Uint8Array(await file.arrayBuffer()),v=new DataView(u.buffer,u.byteOffset,u.byteLength);
-    let e=-1;for(let i=u.length-22;i>=Math.max(0,u.length-65558);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
-    if(e<0)throw new Error('This is not a zip file.');
-    const cnt=v.getUint16(e+10,true);let p=v.getUint32(e+16,true);const files={};
-    for(let k=0;k<cnt;k++){
-      if(v.getUint32(p,true)!==0x02014b50)throw new Error('The zip file is damaged.');
-      const meth=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),xl=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true);
-      const name=dec.decode(u.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
-      files[name]={name,dir:name.endsWith('/'),async:async type=>{
-        const ln=v.getUint16(lo+26,true),lx=v.getUint16(lo+28,true),s=lo+30+ln+lx,raw=u.subarray(s,s+cs);
-        let out;if(meth===0)out=raw;else if(meth===8)out=await inflate(raw);else throw new Error('This zip uses a type I cannot read.');
-        return type==='string'?dec.decode(out):type==='blob'?new Blob([out]):out;
-      }};
-    }
-    return {files};
-  };
-  window.JSZip=MiniZip;
-})();
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
-<header><h1>GD Plist Generator</h1><button class="alt" id="bSave" title="Manual saves"><svg class="ic" viewBox="0 0 24 24"><path d="M5 3h12l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg></button><button class="alt" id="bSet" title="Settings"><svg class="ic" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="alt" id="bCmp" title="Compare original to edited" style="position:relative"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="14" rx="1"/><rect x="14" y="5" width="7" height="14" rx="1"/><path d="M10.5 9.5L13.5 12l-3 2.5"/></svg></button><button class="alt" id="bPack" title="Pack builder"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Pack</button><button class="alt" id="bOff" title="Offline helper">📄</button><button class="alt" id="bAI">🤖</button><button class="alt" id="bKeys">⌨️</button><button class="alt" id="bAuto">Auto saved</button></header>
+<header><h1>GD Plist Generator</h1><button class="alt" id="bSave" title="Manual saves"><svg class="ic" viewBox="0 0 24 24"><path d="M5 3h12l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg></button><button class="alt" id="bSet" title="Settings"><svg class="ic" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="alt" id="bCmp" title="Compare original to edited" style="position:relative"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="14" rx="1"/><rect x="14" y="5" width="7" height="14" rx="1"/><path d="M10.5 9.5L13.5 12l-3 2.5"/></svg></button><button class="alt" id="bSlide" title="Before / after slider"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M12 4v16M9 10l-2 2 2 2M15 10l2 2-2 2"/></svg></button><button class="alt" id="bPack" title="Pack builder"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Pack</button><button class="alt" id="bOff" title="Offline helper">📄</button><button class="alt" id="bAI">🤖</button><button class="alt" id="bKeys">⌨️</button><button class="alt" id="bAuto">Auto saved</button></header>
 <main>
 <section class="card">
 <h2 style="display:flex;align-items:center;gap:6px">Upload<span style="flex:1"></span><button class="alt zb" id="bInfo" title="Info" style="border-radius:50%;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></h2>
@@ -150,6 +97,7 @@ canvas{display:block;margin:auto;flex:none;image-rendering:pixelated}
 <section class="card">
 <h2 style="display:flex;align-items:center;gap:6px">Result<span style="flex:1"></span><button class="alt zb" id="zOut">−</button><button class="alt zb" id="zFit">Fit</button><button class="alt zb" id="zIn">+</button></h2>
 <div class="view"><canvas id="cv"></canvas><div class="empty" id="empty">Upload an image and plist to see the red borders</div></div>
+<div class="row" style="margin-top:6px"><button class="alt" id="afOn">Auto fit box</button><button id="afGo" style="display:none">Fit</button><button class="alt" id="afX" style="display:none">Cancel</button></div>
 <p style="margin:8px 2px 0;font-size:12px;opacity:.55">There might be small differences between the editor and the game.</p>
 <h2 style="display:flex;align-items:center;gap:6px;margin-top:16px">Game preview<span style="flex:1"></span><button class="alt zb" id="gAn" aria-label="Animation preview"><svg class="ic" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button><button class="alt zb" id="gOut">−</button><button class="alt zb" id="gIn">+</button></h2>
 <div class="view" id="gview" style="height:45vh"><canvas id="gv"></canvas></div>
@@ -161,7 +109,7 @@ canvas{display:block;margin:auto;flex:none;image-rendering:pixelated}
 <script>
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
 let sheet=null,sc=null,xdoc=null,fd=null,frames=[],sel=-1,drag=null,fname='edited.plist',hist=[],redo=[],step=1,bind=null,ob=null,multi=false,ms=new Set();
-var cfg={auto:20,red:'#ff0000',bg:'#000000',hs:9,snap:true,gs:true,gd:8,gg:0,names:false,fps:8,dark:null};try{Object.assign(cfg,JSON.parse(localStorage.getItem('gdcfg')||'{}'))}catch(e){}
+var cfg={auto:20,red:'#ff0000',bg:'#000000',hs:9,snap:true,gs:true,gd:8,gg:0,names:false,fps:8,dark:null,fit:0.15};try{Object.assign(cfg,JSON.parse(localStorage.getItem('gdcfg')||'{}'))}catch(e){}
 const sn=v=>cfg.snap?Math.round(v):Math.round(v*2)/2;
 const nums=s=>(String(s).match(/-?\d+(\.\d+)?/g)||[]).map(Number);
 const fmt=n=>String(Math.round(n*10)/10);
@@ -1032,7 +980,7 @@ async function clearData(){
   setBox();
 }
 function setBox(){
-  const row=(l,c)=>'<div class="kr"><span>'+l+'</span>'+c+'</div>';
+  const row=(l,c)=>'<div class="kr"><span>'+l+'</span>'+c+(INFO[l]?'<button class="alt" data-i="'+l+'" aria-label="Info" style="border-radius:50%;width:26px;height:26px;padding:0;flex:none;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>':'')+'</div>';
   const dk=cfg.dark===null?matchMedia('(prefers-color-scheme: dark)').matches:cfg.dark;
   modal('<span class="x" id="mx">×</span><h3>Settings</h3>'+
     row('Autosave','<button class="alt" id="sA">'+(cfg.auto?cfg.auto+' min':'Off')+'</button>')+
@@ -1048,8 +996,12 @@ function setBox(){
     row('Animation speed','<input type="range" id="sF" min="1" max="30" value="'+cfg.fps+'">')+
     row('Command prefix','<input type="text" id="sP" style="width:70px;text-align:center" value="'+esc(cfg.pfx||'~')+'">')+
     '<div id="sPm" style="font-size:12px;opacity:.5;min-height:16px;margin:-4px 0 6px"></div>'+
-    '<button class="alt" id="sK">Reset keybinds</button><button class="alt" id="sC">Clear saved data</button><p style="font-size:12px;opacity:.6">Version 4.0</p>');
+    row('Ignore auto fit under opacity','<input type="number" id="sFt" min="0" max="1" step="0.01" style="width:70px" value="'+(+cfg.fit).toFixed(2)+'">')+
+    row('Backup','<button class="alt" id="sDl">Download</button><button class="alt" id="sUl">Upload</button>')+row('Reset keybinds','<button class="alt" id="sK">Reset</button>')+row('Clear saved data','<button class="alt" id="sC">Clear</button>')+'<p style="font-size:12px;opacity:.6">Version 4.1</p>');
   $('mx').onclick=closeM;
+  document.querySelectorAll('#mb [data-i]').forEach(b=>b.onclick=()=>{modal('<span class="x" id="mx">×</span><h3>Info</h3><p>'+esc(INFO[b.dataset.i])+'</p>');$('mx').onclick=setBox});
+  $('sFt').oninput=()=>{const v=parseFloat($('sFt').value);if(v>=0&&v<=1){cfg.fit=v;saveCfg()}};
+  $('sDl').onclick=expSaves;$('sUl').onclick=()=>pickSaves(()=>{});
   $('sA').onclick=()=>{const o=[10,20,30,0];cfg.auto=o[(o.indexOf(cfg.auto)+1)%4];saveCfg();setAuto();setBox()};
   $('sT').onchange=()=>{cfg.dark=$('sT').checked;saveCfg();applyCfg()};
   $('sR').oninput=()=>{cfg.red=$('sR').value;saveCfg();draw()};
@@ -1066,14 +1018,63 @@ function setBox(){
   $('sK').onclick=()=>ask2('Are you sure?','Yes','No',()=>{keys={};try{localStorage.setItem('gdkeys','{}')}catch(e){}updTap();setBox()});
   $('sC').onclick=()=>ask2('Are you sure to delete all your data?','Yes','No',()=>ask2('Are you really sure?',"I'm really sure",'Not really sure',clearData));
 }
+const INFO={'Autosave':'How often your work is saved by itself. Tap to switch between 10, 20, 30 minutes or Off.','Dark theme':'Switches the page between dark and light.','Border color':'Changes the color of the red borders.','Box background':'Changes the background color behind the sheet.','Handle size':'The base size of the O and + handles. Bigger boxes get slightly bigger handles.','Pixel snapping':'Moves and resizes in whole pixels only, so numbers stay clean.','Group snap':'Box edges stick to nearby boxes with a guide line.','Group snap distance (px)':'How close a box must be to another box before it snaps.','Snap gap (px)':'The space left between two snapped boxes. 0 means they touch.','Show group names':'Shows the name of each group on its box by default.','Animation speed':'How fast the animation preview plays.','Command prefix':'The symbol that starts a command for the premade helper, like ~.','Ignore auto fit under opacity':'Fit ignores pixels fainter than this number. Higher skips more glow or shadow. Lower includes faint pixels.','Backup':'Download saves your manual saves to a file. Upload loads them back.','Reset keybinds':'Puts all keybinds back to their defaults. It asks you to confirm.','Clear saved data':'Deletes all your saved work. It asks you to confirm twice.'};
+/* before/after slider */
+function origBoxes(){const d=new DOMParser().parseFromString(origText,'text/xml'),rp=pairs(d.querySelector('plist > dict')),c=[...rp.frames.children],o=[];for(let i=0;i<c.length;i+=2){const m=pairs(c[i+1]),k=m.textureRect?'textureRect':'frame';if(!m[k])continue;const r=nums(m[k].textContent);if(r.length<4)continue;const rot=m.textureRotated?m.textureRotated.tagName==='true':!!(m.rotated&&m.rotated.tagName==='true');o.push([r[0],r[1],rot?r[3]:r[2],rot?r[2]:r[3]])}return o}
+function slideBox(){
+  if(!sheet||!origText){modal('<span class="x" id="mx">×</span><h3>Before / after</h3><p>Upload an image and a plist first.</p>');$('mx').onclick=closeM;return}
+  modal('<span class="x" id="mx">×</span><h3>Before / after</h3><canvas id="sl" style="width:100%;touch-action:none"></canvas><p style="font-size:12px;opacity:.6">Left of the line: original. Right: your edit. Drag the line left or right.</p>');
+  $('mx').onclick=closeM;
+  const c=$('sl'),g=c.getContext('2d'),O=origBoxes();let p=.5;c.width=sheet.width;c.height=sheet.height;const lw=Math.max(1,c.width/300);
+  function rd(){g.fillStyle=cfg.bg;g.fillRect(0,0,c.width,c.height);g.drawImage(sheet,0,0);const X=p*c.width;g.lineWidth=lw;g.strokeStyle=cfg.red;
+    g.save();g.beginPath();g.rect(0,0,X,c.height);g.clip();O.forEach(b=>g.strokeRect(b[0],b[1],b[2],b[3]));g.restore();
+    g.save();g.beginPath();g.rect(X,0,c.width-X,c.height);g.clip();frames.forEach(f=>g.strokeRect(f.x,f.y,f.w,f.h));g.restore();
+    g.fillStyle='#fff';g.fillRect(X-lw,0,lw*2,c.height);g.beginPath();g.arc(X,c.height/2,lw*6,0,7);g.fill()}
+  const mv=e=>{const r=c.getBoundingClientRect();p=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));rd()};
+  c.onpointerdown=e=>{c.setPointerCapture(e.pointerId);mv(e);c.onpointermove=mv};c.onpointerup=()=>{c.onpointermove=null};rd();
+}
+$('bSlide').onclick=slideBox;
+/* auto fit */
+let af=null,afD=null;
+const afUI=on=>{$('afOn').style.display=on?'none':'';$('afGo').style.display=$('afX').style.display=on?'':'none'};
+const _draw0=draw;draw=function(){_draw0();if(af&&sheet){ctx.save();ctx.fillStyle='rgba(43,111,230,.18)';ctx.fillRect(af.x,af.y,af.w,af.h);ctx.strokeStyle='#2b6fe6';ctx.lineWidth=Math.max(2,3/zf());ctx.strokeRect(af.x,af.y,af.w,af.h);const s=Math.max(6,12/zf());ctx.fillStyle='#2b6fe6';[[0,0],[1,0],[0,1],[1,1]].forEach(a=>ctx.fillRect(af.x+a[0]*af.w-s/2,af.y+a[1]*af.h-s/2,s,s));ctx.restore()}};
+$('afOn').onclick=()=>{if(!sheet)return status('Upload an image first',true);const f=sel>=0?frames[sel]:null;af=f?{x:Math.max(0,f.x-10),y:Math.max(0,f.y-10),w:Math.min(sheet.width,f.w+20),h:Math.min(sheet.height,f.h+20)}:{x:sheet.width/3,y:sheet.height/3,w:sheet.width/3,h:sheet.height/3};afUI(1);draw()};
+$('afX').onclick=()=>{af=null;afUI(0);draw()};
+['pointerdown','pointermove','pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,e=>{if(!af)return;e.stopImmediatePropagation();e.preventDefault();
+  const r=cv.getBoundingClientRect(),k=cv.width/r.width,px=(e.clientX-r.left)*k,py=(e.clientY-r.top)*k,s=Math.max(10,24/zf());
+  if(t==='pointerdown'){cv.setPointerCapture(e.pointerId);const cx=px<af.x+s?0:px>af.x+af.w-s?1:-1,cy=py<af.y+s?0:py>af.y+af.h-s?1:-1;afD=(cx>=0&&cy>=0)?{m:'r',cx,cy}:(px>af.x&&px<af.x+af.w&&py>af.y&&py<af.y+af.h)?{m:'m',dx:px-af.x,dy:py-af.y}:null}
+  else if(t==='pointermove'&&afD){const W=sheet.width,H=sheet.height;
+    if(afD.m==='m'){af.x=Math.max(0,Math.min(W-af.w,px-afD.dx));af.y=Math.max(0,Math.min(H-af.h,py-afD.dy))}
+    else{let x0=af.x,y0=af.y,x1=af.x+af.w,y1=af.y+af.h;const X=Math.max(0,Math.min(W,px)),Y=Math.max(0,Math.min(H,py));if(afD.cx)x1=X;else x0=X;if(afD.cy)y1=Y;else y0=Y;af.x=Math.min(x0,x1);af.w=Math.max(4,Math.abs(x1-x0));af.y=Math.min(y0,y1);af.h=Math.max(4,Math.abs(y1-y0))}
+    draw()}
+  else if(t!=='pointermove')afD=null},true));
+$('afGo').onclick=()=>{
+  const x0=Math.floor(af.x),y0=Math.floor(af.y),w=Math.min(sheet.width-x0,Math.ceil(af.w)),h=Math.min(sheet.height-y0,Math.ceil(af.h)),d=sc.getImageData(x0,y0,w,h).data,t=cfg.fit*255;
+  let a=w,b=h,c=-1,e=-1;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=d[(y*w+x)*4+3];if(v>0&&v>=t){if(x<a)a=x;if(x>c)c=x;if(y<b)b=y;if(y>e)e=y}}
+  if(c<0)return status('No visible pixels found in the blue box',true);
+  af=null;afUI(0);add();const f=frames[sel],W=c-a+1,H=e-b+1;f.x=x0+a;f.y=y0+b;f.w=W;f.h=H;f.ox=0;f.oy=0;f.sm=[W,H];
+  const m=pairs(f.el);['spriteSourceSize','spriteSize'].forEach(k=>{if(m[k])m[k].textContent='{'+W+','+H+'}'});
+  list();panel();draw();status('New group made from the visible pixels');
+};
+/* backup */
+async function expSaves(){try{const db=await idb2(),rows=await new Promise(r=>{const q=db.transaction('m').objectStore('m').getAll();q.onsuccess=()=>r(q.result)}),out=[];
+  for(const r of rows){const u=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(r.img)});out.push({t:r.t,name:r.name,plist:r.plist,fname:r.fname,img:u})}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({gdplistSaves:1,saves:out})],{type:'application/json'}));a.download='gd-plist-saves.json';a.click();status('Saves downloaded')}catch(e){status('Could not download saves',true)}}
+function pickSaves(cb){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const j=JSON.parse(await i.files[0].text()),L=j.saves.map(r=>{const p=r.img.split(','),bin=atob(p[1]),u=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);return{t:r.t,name:r.name,plist:r.plist,fname:r.fname,img:new Blob([u],{type:'image/png'})}});
+  const db=await idb2(),tx=db.transaction('m','readwrite');L.forEach(r=>tx.objectStore('m').put(r));tx.oncomplete=()=>{status('Saves uploaded: '+L.length);cb()}}catch(e){status('Could not read that saves file',true)}};i.click()}
+/* update notice */
+(function(){let base=null;const h=s=>{let x=0;for(let i=0;i<s.length;i++)x=(x*31+s.charCodeAt(i))|0;return x};
+  async function chk(){try{const r=await fetch(location.href.split('#')[0],{cache:'no-store'});if(!r.ok)return;const v=h(await r.text());if(base===null)base=v;else if(v!==base&&!$('upd')){const d=document.createElement('div');d.id='upd';d.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#2b6fe6;color:#fff;padding:12px;border-radius:10px;display:flex;gap:10px;align-items:center;justify-content:space-between';d.innerHTML='<span>There is a new version of the page.</span>';const b=document.createElement('button');b.textContent='Reload';b.style.cssText='width:auto;padding:6px 14px';b.onclick=()=>location.reload();d.append(b);document.body.append(d)}}catch(e){}}
+  setTimeout(chk,3000);setInterval(chk,300000)})();
 $('bSet').onclick=setBox;
 const idb2=()=>new Promise((ok,no)=>{const r=indexedDB.open('gdplist-manual',1);r.onupgradeneeded=()=>r.result.createObjectStore('m',{keyPath:'t'});r.onsuccess=()=>ok(r.result);r.onerror=no});
 async function manualBox(){
   let rows=[];
   try{const db=await idb2();rows=await new Promise(r=>{const q=db.transaction('m').objectStore('m').getAll();q.onsuccess=()=>r(q.result)})}catch(e){}
   rows.sort((a,b)=>b.t-a.t);
-  modal('<span class="x" id="mx">×</span><h3>Manual saves</h3><input type="text" id="msN" placeholder="Name (optional)"><button id="msGo"'+(sheet&&xdoc?'':' disabled')+'>Save now</button>'+(rows.length?rows.map(r=>{const d=new Date(r.t);return'<div class="kr"><span>'+esc(r.name||'Manual save')+' | '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' | '+d.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' |</span><button class="alt" data-l="'+r.t+'">+</button><button class="alt" data-md="'+r.t+'">♻</button></div>'}).join(''):'<p>No manual saves yet.</p>'));
+  modal('<span class="x" id="mx">×</span><h3>Manual saves</h3><input type="text" id="msN" placeholder="Name (optional)"><button id="msGo"'+(sheet&&xdoc?'':' disabled')+'>Save now</button><button class="alt" id="msDl">Download saves</button><button class="alt" id="msUl">Upload saves</button>'+(rows.length?rows.map(r=>{const d=new Date(r.t);return'<div class="kr"><span>'+esc(r.name||'Manual save')+' | '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' | '+d.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' |</span><button class="alt" data-l="'+r.t+'">+</button><button class="alt" data-md="'+r.t+'">♻</button></div>'}).join(''):'<p>No manual saves yet.</p>'));
   $('mx').onclick=closeM;
+  $('msDl').onclick=expSaves;$('msUl').onclick=()=>pickSaves(manualBox);
   $('msGo').onclick=async()=>{try{const blob=await new Promise(r=>sheet.toBlob(r)),db=await idb2(),tx=db.transaction('m','readwrite');tx.objectStore('m').put({t:Date.now(),name:$('msN').value.trim(),img:blob,plist:serialize(),fname});tx.oncomplete=manualBox}catch(e){}};
   document.querySelectorAll('#mb [data-l]').forEach(b=>b.onclick=async()=>{const r=rows.find(x=>x.t==b.dataset.l);try{setSheet(await imgFrom(r.img));load(r.plist);fname=r.fname;closeM();refresh()}catch(e){status('Could not load that save',true);closeM()}});
   document.querySelectorAll('#mb [data-md]').forEach(b=>b.onclick=async()=>{try{const db=await idb2(),tx=db.transaction('m','readwrite');tx.objectStore('m').delete(+b.dataset.md);tx.oncomplete=manualBox}catch(e){}});
@@ -1200,8 +1201,6 @@ $('bAuto').onclick=async()=>{
     try{setSheet(await imgFrom(r.img));load(r.plist);fname=r.fname;closeM();refresh()}catch(e){status('Could not load that save',true);closeM()}
   });
 };
-
-if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
